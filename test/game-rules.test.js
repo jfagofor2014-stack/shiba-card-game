@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn, legalPlays } from '../src/game-rules.js';
 
 function handWith(state, who, cardId) {
   const s = JSON.parse(JSON.stringify(state));
@@ -226,4 +226,19 @@ test('endTurn discards own sukima from field', () => {
   s = endTurn(s);
   assert.ok(!s.field.host.includes('sukima_1'));
   assert.ok(s.discard.includes('sukima_1'));
+});
+
+test('legalPlays on own main turn returns full hand', () => {
+  const s = createInitialState();
+  assert.equal(legalPlays(s, 'host').length, 5);
+  assert.deepEqual(legalPlays(s, 'guest'), []);
+});
+
+test('legalPlays during awaiting_counter returns only valid counters for defender', () => {
+  let s = createInitialState();
+  s.hands.host[0] = 'hikoki_1';
+  s.hands.guest = ['kyohi_1', 'kyomu_1', 'hikoki_4', 'drill_3', 'sukima_3'];
+  s = playCard(s, 'host', 'hikoki_1'); // score attack
+  assert.deepEqual(legalPlays(s, 'guest'), ['kyohi_1']);
+  assert.deepEqual(legalPlays(s, 'host'), []);
 });

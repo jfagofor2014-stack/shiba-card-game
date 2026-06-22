@@ -203,3 +203,16 @@ export function addScore(state, who, points) {
   }
   return s;
 }
+
+export function legalPlays(state, who) {
+  if (state.winner) return [];
+  if (state.phase === 'main') {
+    return state.turn === who ? state.hands[who].slice() : [];
+  }
+  if (state.phase === 'awaiting_counter') {
+    if (who === state.pending.actor) return [];
+    const wantKind = state.pending.attackType === 'score' ? 'kyohi' : 'kyomu';
+    return state.hands[who].filter((id) => cardKind(id) === wantKind);
+  }
+  return [];
+}
