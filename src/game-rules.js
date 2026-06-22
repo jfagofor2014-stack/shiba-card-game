@@ -1,3 +1,5 @@
+function label(role) { return role === 'host' ? 'あなた' : 'あいて'; }
+
 export const CARD_TYPES = {
   hikoki:   { name: 'ヒコーキ耳',       category: 'amae',      count: 6, emoji: '🐕', color: 'pink' },
   hesoten:  { name: 'へそ天',           category: 'amae',      count: 4, emoji: '🐶', color: 'pink' },
@@ -87,6 +89,7 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
     const idx = s.hands[who].indexOf(cardId);
     if (idx !== -1) s.hands[who].splice(idx, 1);
     s.field[who].push(cardId);
+    s.log.push(`${label(who)}は「${CARD_TYPES[kind].name}」を場に出した`);
     return s;
   }
 
@@ -95,23 +98,31 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
   switch (kind) {
     case 'hikoki':
       s = addScore(s, who, 2);
+      s.log.push(`${label(who)}は「${CARD_TYPES.hikoki.name}」で2点獲得`);
       break;
     case 'hesoten':
       s = addScore(s, who, 3);
       s = drawCards(s, who, 1, rng);
+      s.log.push(`${label(who)}は「${CARD_TYPES.hesoten.name}」で3点獲得し1枚引いた`);
       break;
-    case 'shibakyori':
+    case 'shibakyori': {
+      const oppHandBefore = s.hands[opp].length;
       s = addScore(s, who, 1);
+      let shibaLine = `${label(who)}は「${CARD_TYPES.shibakyori.name}」で1点獲得`;
       if (!hasSukima(s, opp) && s.hands[opp].length > 0) {
         const j = Math.floor(rng() * s.hands[opp].length);
         const removed = s.hands[opp].splice(j, 1)[0];
         s.discard.push(removed);
+        shibaLine += 'し、相手の手札を1枚捨てさせた';
       }
+      s.log.push(shibaLine);
       break;
+    }
     case 'drill': {
       const toDiscard = opts.drillDiscard || [];
       for (const id of toDiscard) discardFromHand(s, who, id);
       s = drawCards(s, who, toDiscard.length + 1, rng);
+      s.log.push(`${label(who)}は「${CARD_TYPES.drill.name}」で手札を${toDiscard.length}枚捨て${toDiscard.length + 1}枚引いた`);
       break;
     }
     case 'zoomies': {
@@ -124,14 +135,21 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
         s.discard.push(top);
         if (CARD_TYPES[cardKind(top)].category === 'amae') {
           s = addScore(s, who, 5);
+          s.log.push(`${label(who)}は「${CARD_TYPES.zoomies.name}」で5点獲得！`);
         } else {
           s.forceEndTurn = true;
+          s.log.push(`${label(who)}は「${CARD_TYPES.zoomies.name}」に失敗しターン終了`);
         }
       }
       break;
     }
     case 'kangeki':
-      if (!hasSukima(s, opp)) s.skipNext[opp] = true;
+      if (!hasSukima(s, opp)) {
+        s.skipNext[opp] = true;
+        s.log.push(`${label(who)}は「${CARD_TYPES.kangeki.name}」で相手を1回休みにした`);
+      } else {
+        s.log.push(`${label(who)}の「${CARD_TYPES.kangeki.name}」は隙間にすっぽりで無効化された`);
+      }
       break;
     default:
       break;
@@ -167,6 +185,8 @@ export function applyCounter(state, defender, counterCardId, rng = Math.random) 
     discardFromHand(s, defender, counterCardId);
     s.pending = null;
     s.phase = 'main';
+    const counterName = CARD_TYPES[cardKind(counterCardId)].name;
+    s.log.push(`${label(defender)}は「${counterName}」で${label(actor)}の効果を無効化した`);
     return s;
   }
   s.pending = null;
@@ -188,6 +208,7 @@ export function endTurn(state, rng = Math.random) {
   let nextTurn = opponent(who);
   if (s.skipNext[nextTurn]) {
     s.skipNext[nextTurn] = false;
+    s.log.push(`${label(nextTurn)}は1回休み`);
     nextTurn = who;
   }
   s.turn = nextTurn;

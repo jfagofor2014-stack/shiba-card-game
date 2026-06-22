@@ -242,3 +242,33 @@ test('legalPlays during awaiting_counter returns only valid counters for defende
   assert.deepEqual(legalPlays(s, 'guest'), ['kyohi_1']);
   assert.deepEqual(legalPlays(s, 'host'), []);
 });
+
+// --- Battle log tests ---
+
+test('resolveEffect hikoki appends a log entry containing ヒコーキ耳', () => {
+  const s = handWith(createInitialState(), 'host', 'hikoki_1');
+  const before = s.log.length;
+  const next = resolveEffect(s, 'host', 'hikoki_1');
+  assert.equal(next.log.length, before + 1);
+  assert.ok(next.log[next.log.length - 1].includes('ヒコーキ耳'));
+});
+
+test('applyCounter nullify path appends a log entry containing 無効化', () => {
+  let s = createInitialState();
+  s.hands.host[0] = 'hikoki_1';
+  s.hands.guest[0] = 'kyohi_1';
+  s = playCard(s, 'host', 'hikoki_1');
+  const before = s.log.length;
+  s = applyCounter(s, 'guest', 'kyohi_1');
+  assert.ok(s.log.length > before);
+  assert.ok(s.log.some((line) => line.includes('無効化')));
+});
+
+test('endTurn consuming a skip appends a log entry containing 1回休み', () => {
+  let s = createInitialState();
+  s.skipNext.guest = true;
+  const before = s.log.length;
+  s = endTurn(s);
+  assert.ok(s.log.length > before);
+  assert.ok(s.log.some((line) => line.includes('1回休み')));
+});
