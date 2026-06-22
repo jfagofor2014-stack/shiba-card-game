@@ -59,7 +59,7 @@ function startOnline(subscribe, pushState) {
   });
 }
 
-function renderOnline(pushState) {
+async function renderOnline(pushState) {
   renderBoard(state, myRole, { onPlayCard: (cardId) => onPlayCardOnline(cardId, pushState) });
   if (state.winner) { showResult(state.winner === myRole ? 'あなた' : '相手'); return; }
 
@@ -84,7 +84,7 @@ function renderOnline(pushState) {
     } else {
       // no counter available: auto-resolve as defender
       state = applyCounter(state, myRole, null);
-      afterCounter(pushState);
+      await afterCounter(pushState);
     }
   }
 }
@@ -95,21 +95,21 @@ async function afterCounter(pushState) {
   await pushState(roomCode, state);
 }
 
-function onPlayCardOnline(cardId, pushState) {
+async function onPlayCardOnline(cardId, pushState) {
   if (state.turn !== myRole || state.phase !== 'main') return;
   if (!legalPlays(state, myRole).includes(cardId)) return;
   let opts = {};
   if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
   state = playCard(state, myRole, cardId, opts);
-  state.lastActor = myRole;
-  pushState(roomCode, state).then(() => {
-    if (state.phase === 'main') {
-      // no counter needed; end my turn
-      state = endTurn(state);
-      pushState(roomCode, state);
-    }
-    // if awaiting_counter, defender will resolve; I endTurn when I next see main (handled in renderOnline)
-  });
+  if (state.phase === 'awaiting_counter') {
+    // counterable card: set lastActor so actor finalizes after defender resolves
+    state.lastActor = myRole;
+    await pushState(roomCode, state);
+  } else {
+    // non-counterable card: end turn immediately, do NOT set lastActor
+    state = endTurn(state);
+    await pushState(roomCode, state);
+  }
 }
 
 function startCpuGame() {
