@@ -9,3 +9,24 @@ export const CARD_TYPES = {
   zoomies:  { name: 'ズーミーズ（柴走り）', category: 'wild',  count: 4, emoji: '💨', color: 'orange' },
   kangeki:  { name: '無限換毛期',       category: 'wild',      count: 2, emoji: '🌾', color: 'orange' },
 };
+
+export function cardKind(cardId) {
+  return cardId.slice(0, cardId.lastIndexOf('_'));
+}
+
+export function buildDeck() {
+  const deck = [];
+  for (const [kind, def] of Object.entries(CARD_TYPES)) {
+    for (let i = 1; i <= def.count; i++) deck.push(`${kind}_${i}`);
+  }
+  return deck;
+}
+
+export function shuffle(arr, rng = Math.random) {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
