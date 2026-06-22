@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {
-  getDatabase, ref, set, get, onValue, child,
+  getDatabase, ref, set, get, onValue, child, update,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 import { firebaseConfig } from './firebase-config.js';
 import { createInitialState } from './game-rules.js';
@@ -26,9 +26,11 @@ export async function joinRoom(code) {
   const snap = await get(child(ref(db), `rooms/${code}`));
   if (!snap.exists()) throw new Error('部屋が見つかりません');
   const initial = createInitialState();
-  await set(ref(db, `rooms/${code}/players/guest`), { name: 'guest', connected: true });
-  await set(ref(db, `rooms/${code}/status`), 'playing');
-  await set(ref(db, `rooms/${code}/state`), initial);
+  await update(ref(db, `rooms/${code}`), {
+    'players/guest': { name: 'guest', connected: true },
+    status: 'playing',
+    state: initial,
+  });
   return { code, role: 'guest' };
 }
 
