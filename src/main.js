@@ -14,6 +14,7 @@ const CPU = 'guest';
 let myRole = null;
 let roomCode = null;
 let unsub = null;
+let resolvingCounter = false;
 
 function wireMenu() {
   document.getElementById('btn-cpu').onclick = () => showScreen('difficulty');
@@ -60,24 +61,33 @@ function startOnline(subscribe, pushState) {
 }
 
 async function renderOnline(pushState) {
+  // Reset re-entrancy guard whenever we are not in awaiting_counter phase,
+  // so it cannot get permanently stuck true.
+  if (state.phase !== 'awaiting_counter') resolvingCounter = false;
+
   renderBoard(state, myRole, { onPlayCard: (cardId) => onPlayCardOnline(cardId, pushState) });
   if (state.winner) { showResult(state.winner === myRole ? 'あなた' : '相手'); return; }
 
   // if I am the defender in an awaiting_counter, I resolve the counter,
   // run endTurn, and push the finalized next-turn state in a single write.
   if (state.phase === 'awaiting_counter' && state.pending && state.pending.actor !== myRole) {
+    // Guard: if a resolution is already in-flight, ignore duplicate snapshots.
+    if (resolvingCounter) return;
+    resolvingCounter = true;
+
     const counters = legalPlays(state, myRole);
     const def = CARD_TYPES[cardKind(state.pending.cardId)];
     if (counters.length > 0) {
       showCounterPrompt(
         def.name,
-        async () => { state = applyCounter(state, myRole, counters[0]); await afterCounter(pushState); },
-        async () => { state = applyCounter(state, myRole, null); await afterCounter(pushState); },
+        async () => { state = applyCounter(state, myRole, counters[0]); await afterCounter(pushState); resolvingCounter = false; },
+        async () => { state = applyCounter(state, myRole, null); await afterCounter(pushState); resolvingCounter = false; },
       );
     } else {
       // no counter available: auto-resolve as defender
       state = applyCounter(state, myRole, null);
       await afterCounter(pushState);
+      resolvingCounter = false;
     }
   }
 }
