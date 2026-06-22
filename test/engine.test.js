@@ -30,5 +30,6 @@ test('multiple seeds all complete without throwing', () => {
       rng
     );
     assert.ok(final.winner, `seed ${base} produced no winner`);
+    assert.ok(final.scores[final.winner] >= 20, `seed ${base} winner below 20`);
   }
 });
