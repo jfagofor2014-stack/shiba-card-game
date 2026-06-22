@@ -140,6 +140,15 @@ test('zoomies on non-amae top forces end of turn', () => {
   assert.equal(next.forceEndTurn, true);
 });
 
+test('shibakyori scores but does not destroy hand when opponent has sukima', () => {
+  const s = handWith(createInitialState(), 'host', 'shibakyori_1');
+  s.field.guest.push('sukima_2');
+  const before = s.hands.guest.length;
+  const next = resolveEffect(s, 'host', 'shibakyori_1', {}, () => 0);
+  assert.equal(next.scores.host, 1);
+  assert.equal(next.hands.guest.length, before); // unchanged
+});
+
 test('drill discards chosen cards and draws discarded+1', () => {
   const s = createInitialState();
   s.hands.host = ['drill_1', 'hikoki_3', 'hesoten_2'];

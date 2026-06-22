@@ -68,8 +68,10 @@ export function opponent(who) {
 
 function discardFromHand(s, who, cardId) {
   const idx = s.hands[who].indexOf(cardId);
-  if (idx !== -1) s.hands[who].splice(idx, 1);
-  s.discard.push(cardId);
+  if (idx !== -1) {
+    s.hands[who].splice(idx, 1);
+    s.discard.push(cardId);
+  }
 }
 
 function hasSukima(s, who) {
