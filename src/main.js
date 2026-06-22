@@ -1,7 +1,7 @@
 import { showScreen, renderBoard, showCounterPrompt, showResult } from './ui.js';
 import {
   createInitialState, playCard, applyCounter, endTurn,
-  legalPlays, opponent, needsCounter, CARD_TYPES, cardKind,
+  legalPlays, CARD_TYPES, cardKind,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
 
@@ -80,6 +80,7 @@ function cpuTurn() {
 function finishCpuTurn() {
   if (!state.winner) state = endTurn(state);
   refresh();
+  if (!state.winner && state.turn === CPU) cpuTurn();
 }
 
 wireMenu();
