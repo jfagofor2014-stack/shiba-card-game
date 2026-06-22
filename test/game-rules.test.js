@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState } from '../src/game-rules.js';
 
 test('CARD_TYPES exposes the 9 card kinds', () => {
   assert.equal(Object.keys(CARD_TYPES).length, 9);
@@ -26,4 +26,15 @@ test('shuffle is deterministic with a seeded rng and non-destructive', () => {
   assert.equal(shuffled.length, 40);
   assert.equal(deck.length, 40); // original untouched
   assert.notDeepEqual(shuffled, deck);
+});
+
+test('createInitialState deals 5 cards to each player', () => {
+  const s = createInitialState();
+  assert.equal(s.hands.host.length, 5);
+  assert.equal(s.hands.guest.length, 5);
+  assert.equal(s.deck.length, 30);
+  assert.equal(s.scores.host, 0);
+  assert.equal(s.turn, 'host');
+  assert.equal(s.phase, 'main');
+  assert.equal(s.winner, null);
 });

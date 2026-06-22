@@ -30,3 +30,17 @@ export function shuffle(arr, rng = Math.random) {
   }
   return out;
 }
+
+export function createInitialState(rng = Math.random) {
+  const deck = shuffle(buildDeck(), rng);
+  const hands = { host: deck.splice(0, 5), guest: deck.splice(0, 5) };
+  return {
+    deck, discard: [],
+    hands, field: { host: [], guest: [] },
+    scores: { host: 0, guest: 0 },
+    turn: 'host', phase: 'main',
+    pending: null, winner: null,
+    skipNext: { host: false, guest: false },
+    log: [],
+  };
+}
