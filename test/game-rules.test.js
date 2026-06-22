@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect } from '../src/game-rules.js';
+
+function handWith(state, who, cardId) {
+  const s = JSON.parse(JSON.stringify(state));
+  s.hands[who][0] = cardId;
+  return s;
+}
 
 test('CARD_TYPES exposes the 9 card kinds', () => {
   assert.equal(Object.keys(CARD_TYPES).length, 9);
@@ -74,4 +80,71 @@ test('addScore below 20 keeps playing', () => {
   const next = addScore(createInitialState(), 'host', 2);
   assert.equal(next.winner, null);
   assert.equal(next.phase, 'main');
+});
+
+test('hikoki gives 2 points and discards the card', () => {
+  const s = handWith(createInitialState(), 'host', 'hikoki_1');
+  const next = resolveEffect(s, 'host', 'hikoki_1');
+  assert.equal(next.scores.host, 2);
+  assert.ok(next.discard.includes('hikoki_1'));
+  assert.ok(!next.hands.host.includes('hikoki_1'));
+});
+
+test('hesoten gives 3 points and draws a card', () => {
+  const s = handWith(createInitialState(), 'host', 'hesoten_1');
+  const before = s.hands.host.length;
+  const next = resolveEffect(s, 'host', 'hesoten_1');
+  assert.equal(next.scores.host, 3);
+  // -1 played card +1 drawn = same hand size
+  assert.equal(next.hands.host.length, before);
+});
+
+test('shibakyori gives 1 point and discards a random opponent card', () => {
+  const s = handWith(createInitialState(), 'host', 'shibakyori_1');
+  const next = resolveEffect(s, 'host', 'shibakyori_1', {}, () => 0);
+  assert.equal(next.scores.host, 1);
+  assert.equal(next.hands.guest.length, 4);
+});
+
+test('sukima goes to own field and persists', () => {
+  const s = handWith(createInitialState(), 'host', 'sukima_1');
+  const next = resolveEffect(s, 'host', 'sukima_1');
+  assert.ok(next.field.host.includes('sukima_1'));
+});
+
+test('kangeki sets opponent skipNext', () => {
+  const s = handWith(createInitialState(), 'host', 'kangeki_1');
+  const next = resolveEffect(s, 'host', 'kangeki_1');
+  assert.equal(next.skipNext.guest, true);
+});
+
+test('kangeki is nullified when opponent has sukima on field', () => {
+  const s = handWith(createInitialState(), 'host', 'kangeki_1');
+  s.field.guest.push('sukima_2');
+  const next = resolveEffect(s, 'host', 'kangeki_1');
+  assert.equal(next.skipNext.guest, false);
+});
+
+test('zoomies on amae top gives 5 points', () => {
+  const s = handWith(createInitialState(), 'host', 'zoomies_1');
+  s.deck.unshift('hikoki_2'); // amae on top
+  const next = resolveEffect(s, 'host', 'zoomies_1');
+  assert.equal(next.scores.host, 5);
+});
+
+test('zoomies on non-amae top forces end of turn', () => {
+  const s = handWith(createInitialState(), 'host', 'zoomies_1');
+  s.deck.unshift('drill_2'); // non-amae on top
+  const next = resolveEffect(s, 'host', 'zoomies_1');
+  assert.equal(next.scores.host, 0);
+  assert.equal(next.forceEndTurn, true);
+});
+
+test('drill discards chosen cards and draws discarded+1', () => {
+  const s = createInitialState();
+  s.hands.host = ['drill_1', 'hikoki_3', 'hesoten_2'];
+  const next = resolveEffect(s, 'host', 'drill_1', { drillDiscard: ['hikoki_3', 'hesoten_2'] });
+  // played drill (1) + discarded 2 removed = started 3, drew 2+1=3 => hand 3
+  assert.equal(next.hands.host.length, 3);
+  assert.ok(!next.hands.host.includes('drill_1'));
 });

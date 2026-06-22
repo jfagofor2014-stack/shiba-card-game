@@ -66,6 +66,77 @@ export function opponent(who) {
   return who === 'host' ? 'guest' : 'host';
 }
 
+function discardFromHand(s, who, cardId) {
+  const idx = s.hands[who].indexOf(cardId);
+  if (idx !== -1) s.hands[who].splice(idx, 1);
+  s.discard.push(cardId);
+}
+
+function hasSukima(s, who) {
+  return s.field[who].some((id) => cardKind(id) === 'sukima');
+}
+
+export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) {
+  let s = clone(state);
+  const kind = cardKind(cardId);
+  const opp = opponent(who);
+
+  if (kind === 'sukima') {
+    const idx = s.hands[who].indexOf(cardId);
+    if (idx !== -1) s.hands[who].splice(idx, 1);
+    s.field[who].push(cardId);
+    return s;
+  }
+
+  discardFromHand(s, who, cardId);
+
+  switch (kind) {
+    case 'hikoki':
+      s = addScore(s, who, 2);
+      break;
+    case 'hesoten':
+      s = addScore(s, who, 3);
+      s = drawCards(s, who, 1, rng);
+      break;
+    case 'shibakyori':
+      s = addScore(s, who, 1);
+      if (!hasSukima(s, opp) && s.hands[opp].length > 0) {
+        const j = Math.floor(rng() * s.hands[opp].length);
+        const removed = s.hands[opp].splice(j, 1)[0];
+        s.discard.push(removed);
+      }
+      break;
+    case 'drill': {
+      const toDiscard = opts.drillDiscard || [];
+      for (const id of toDiscard) discardFromHand(s, who, id);
+      s = drawCards(s, who, toDiscard.length + 1, rng);
+      break;
+    }
+    case 'zoomies': {
+      if (s.deck.length === 0 && s.discard.length > 0) {
+        s.deck = shuffle(s.discard, rng);
+        s.discard = [];
+      }
+      const top = s.deck.shift();
+      if (top) {
+        s.discard.push(top);
+        if (CARD_TYPES[cardKind(top)].category === 'amae') {
+          s = addScore(s, who, 5);
+        } else {
+          s.forceEndTurn = true;
+        }
+      }
+      break;
+    }
+    case 'kangeki':
+      if (!hasSukima(s, opp)) s.skipNext[opp] = true;
+      break;
+    default:
+      break;
+  }
+  return s;
+}
+
 export function addScore(state, who, points) {
   const s = clone(state);
   s.scores[who] += points;
