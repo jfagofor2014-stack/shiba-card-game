@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>至高の柴犬ライフ</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+  <div id="app">
+    <section data-screen="top" class="screen">
+      <h1>🐕 至高の柴犬ライフ</h1>
+      <button id="btn-cpu">CPUと対戦</button>
+      <button id="btn-online">オンライン対戦</button>
+    </section>
+    <section data-screen="difficulty" class="screen hidden">
+      <h2>難易度を選択</h2>
+      <button data-diff="easy">やさしい</button>
+      <button data-diff="normal">ふつう</button>
+      <button class="back">戻る</button>
+    </section>
+    <section data-screen="online" class="screen hidden">
+      <h2>オンライン対戦</h2>
+      <button id="btn-create">部屋を作る</button>
+      <div>
+        <input id="join-code" inputmode="numeric" maxlength="4" placeholder="4桁コード" />
+        <button id="btn-join">参加する</button>
+      </div>
+      <p id="online-status"></p>
+      <button class="back">戻る</button>
+    </section>
+    <section data-screen="game" class="screen hidden">
+      <div id="scoreboard"></div>
+      <div id="opp-field" class="field"></div>
+      <div id="my-field" class="field"></div>
+      <div id="hand" class="hand"></div>
+      <div id="log" class="log"></div>
+    </section>
+    <section data-screen="result" class="screen hidden">
+      <h2 id="result-text"></h2>
+      <button id="btn-home">トップに戻る</button>
+    </section>
+    <div id="modal-root"></div>
+  </div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
