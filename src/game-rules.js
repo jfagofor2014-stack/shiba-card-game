@@ -44,3 +44,20 @@ export function createInitialState(rng = Math.random) {
     log: [],
   };
 }
+
+function clone(state) {
+  return JSON.parse(JSON.stringify(state));
+}
+
+export function drawCards(state, who, n, rng = Math.random) {
+  const s = clone(state);
+  for (let i = 0; i < n; i++) {
+    if (s.deck.length === 0) {
+      if (s.discard.length === 0) break;
+      s.deck = shuffle(s.discard, rng);
+      s.discard = [];
+    }
+    s.hands[who].push(s.deck.shift());
+  }
+  return s;
+}

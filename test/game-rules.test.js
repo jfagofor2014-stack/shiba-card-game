@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards } from '../src/game-rules.js';
 
 test('CARD_TYPES exposes the 9 card kinds', () => {
   assert.equal(Object.keys(CARD_TYPES).length, 9);
@@ -37,4 +37,21 @@ test('createInitialState deals 5 cards to each player', () => {
   assert.equal(s.turn, 'host');
   assert.equal(s.phase, 'main');
   assert.equal(s.winner, null);
+});
+
+test('drawCards moves n cards from deck to hand without mutating input', () => {
+  const s = createInitialState();
+  const before = s.deck.length;
+  const next = drawCards(s, 'host', 2);
+  assert.equal(next.hands.host.length, 7);
+  assert.equal(next.deck.length, before - 2);
+  assert.equal(s.hands.host.length, 5); // original untouched
+});
+
+test('drawCards reshuffles discard when deck is empty', () => {
+  const s = createInitialState();
+  s.discard = s.deck.splice(0); // move all deck to discard, deck now empty
+  const next = drawCards(s, 'host', 1);
+  assert.equal(next.hands.host.length, 6);
+  assert.equal(next.discard.length, 0);
 });
