@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn } from '../src/game-rules.js';
 
 function handWith(state, who, cardId) {
   const s = JSON.parse(JSON.stringify(state));
@@ -156,4 +156,74 @@ test('drill discards chosen cards and draws discarded+1', () => {
   // played drill (1) + discarded 2 removed = started 3, drew 2+1=3 => hand 3
   assert.equal(next.hands.host.length, 3);
   assert.ok(!next.hands.host.includes('drill_1'));
+});
+
+test('needsCounter classifies cards', () => {
+  assert.equal(needsCounter('hikoki_1'), 'score');
+  assert.equal(needsCounter('zoomies_1'), 'score');
+  assert.equal(needsCounter('kangeki_1'), 'sabotage');
+  assert.equal(needsCounter('sukima_1'), null);
+  assert.equal(needsCounter('drill_1'), null);
+});
+
+test('playCard on score card enters awaiting_counter without applying', () => {
+  const s = createInitialState();
+  s.hands.host[0] = 'hikoki_1';
+  const next = playCard(s, 'host', 'hikoki_1');
+  assert.equal(next.phase, 'awaiting_counter');
+  assert.equal(next.pending.cardId, 'hikoki_1');
+  assert.equal(next.scores.host, 0); // not yet applied
+});
+
+test('playCard on non-counter card applies immediately', () => {
+  const s = createInitialState();
+  s.hands.host[0] = 'sukima_1';
+  const next = playCard(s, 'host', 'sukima_1');
+  assert.equal(next.phase, 'main');
+  assert.ok(next.field.host.includes('sukima_1'));
+});
+
+test('applyCounter with kyohi nullifies the score', () => {
+  let s = createInitialState();
+  s.hands.host[0] = 'hikoki_1';
+  s.hands.guest[0] = 'kyohi_1';
+  s = playCard(s, 'host', 'hikoki_1');
+  s = applyCounter(s, 'guest', 'kyohi_1');
+  assert.equal(s.scores.host, 0);
+  assert.ok(s.discard.includes('kyohi_1'));
+  assert.ok(s.discard.includes('hikoki_1'));
+  assert.equal(s.phase, 'main');
+});
+
+test('applyCounter with null applies the original effect', () => {
+  let s = createInitialState();
+  s.hands.host[0] = 'hikoki_1';
+  s = playCard(s, 'host', 'hikoki_1');
+  s = applyCounter(s, 'guest', null);
+  assert.equal(s.scores.host, 2);
+  assert.equal(s.phase, 'main');
+});
+
+test('endTurn refills to 5 and swaps turn', () => {
+  let s = createInitialState();
+  s.hands.host = ['hikoki_2', 'hikoki_3']; // 2 cards
+  s = endTurn(s);
+  assert.equal(s.hands.host.length, 5);
+  assert.equal(s.turn, 'guest');
+});
+
+test('endTurn consumes skipNext by skipping that player', () => {
+  let s = createInitialState();
+  s.skipNext.guest = true;
+  s = endTurn(s); // host -> would be guest, but guest skips -> back to host
+  assert.equal(s.turn, 'host');
+  assert.equal(s.skipNext.guest, false);
+});
+
+test('endTurn discards own sukima from field', () => {
+  let s = createInitialState();
+  s.field.host.push('sukima_1');
+  s = endTurn(s);
+  assert.ok(!s.field.host.includes('sukima_1'));
+  assert.ok(s.discard.includes('sukima_1'));
 });

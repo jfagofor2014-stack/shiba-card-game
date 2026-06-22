@@ -139,6 +139,61 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
   return s;
 }
 
+const SCORE_CARDS = new Set(['hikoki', 'hesoten', 'shibakyori', 'zoomies']);
+
+export function needsCounter(cardId) {
+  const kind = cardKind(cardId);
+  if (SCORE_CARDS.has(kind)) return 'score';
+  if (kind === 'kangeki') return 'sabotage';
+  return null;
+}
+
+export function playCard(state, who, cardId, opts = {}, rng = Math.random) {
+  const attackType = needsCounter(cardId);
+  if (attackType) {
+    const s = clone(state);
+    s.phase = 'awaiting_counter';
+    s.pending = { actor: who, cardId, attackType, opts };
+    return s;
+  }
+  return resolveEffect(state, who, cardId, opts, rng);
+}
+
+export function applyCounter(state, defender, counterCardId, rng = Math.random) {
+  let s = clone(state);
+  const { actor, cardId, opts } = s.pending;
+  if (counterCardId) {
+    discardFromHand(s, actor, cardId);
+    discardFromHand(s, defender, counterCardId);
+    s.pending = null;
+    s.phase = 'main';
+    return s;
+  }
+  s.pending = null;
+  s.phase = 'main';
+  s = resolveEffect(s, actor, cardId, opts, rng);
+  return s;
+}
+
+export function endTurn(state, rng = Math.random) {
+  let s = clone(state);
+  const who = s.turn;
+  s.field[who] = s.field[who].filter((id) => {
+    if (cardKind(id) === 'sukima') { s.discard.push(id); return false; }
+    return true;
+  });
+  const need = 5 - s.hands[who].length;
+  if (need > 0) s = drawCards(s, who, need, rng);
+  s.forceEndTurn = false;
+  let nextTurn = opponent(who);
+  if (s.skipNext[nextTurn]) {
+    s.skipNext[nextTurn] = false;
+    nextTurn = who;
+  }
+  s.turn = nextTurn;
+  return s;
+}
+
 export function addScore(state, who, points) {
   const s = clone(state);
   s.scores[who] += points;
