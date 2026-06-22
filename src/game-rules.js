@@ -61,3 +61,17 @@ export function drawCards(state, who, n, rng = Math.random) {
   }
   return s;
 }
+
+export function opponent(who) {
+  return who === 'host' ? 'guest' : 'host';
+}
+
+export function addScore(state, who, points) {
+  const s = clone(state);
+  s.scores[who] += points;
+  if (s.scores[who] >= 20) {
+    s.winner = who;
+    s.phase = 'finished';
+  }
+  return s;
+}
