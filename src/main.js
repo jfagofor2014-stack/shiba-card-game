@@ -10,6 +10,11 @@ let difficulty = 'normal';
 const HUMAN = 'host';
 const CPU = 'guest';
 
+// Online state
+let myRole = null;
+let roomCode = null;
+let unsub = null;
+
 function wireMenu() {
   document.getElementById('btn-cpu').onclick = () => showScreen('difficulty');
   document.getElementById('btn-online').onclick = () => showScreen('online');
@@ -17,6 +22,93 @@ function wireMenu() {
   document.getElementById('btn-home').onclick = () => showScreen('top');
   document.querySelectorAll('[data-diff]').forEach((b) => {
     b.onclick = () => { difficulty = b.dataset.diff; startCpuGame(); };
+  });
+}
+
+function wireOnline() {
+  document.getElementById('btn-create').onclick = async () => {
+    const { createRoom, joinRoom, subscribe, pushState } = await import('./online.js');
+    const { code, role } = await createRoom();
+    roomCode = code; myRole = role;
+    document.getElementById('online-status').textContent = `コード: ${code}（相手の参加を待っています）`;
+    startOnline(subscribe, pushState);
+  };
+  document.getElementById('btn-join').onclick = async () => {
+    const code = document.getElementById('join-code').value.trim();
+    try {
+      const { createRoom, joinRoom, subscribe, pushState } = await import('./online.js');
+      const res = await joinRoom(code);
+      roomCode = res.code; myRole = res.role;
+      startOnline(subscribe, pushState);
+    } catch (e) {
+      document.getElementById('online-status').textContent = e.message;
+    }
+  };
+}
+
+function startOnline(subscribe, pushState) {
+  if (unsub) unsub();
+  unsub = subscribe(roomCode, (room) => {
+    if (room.status === 'playing' && room.state) {
+      state = room.state;
+      if (document.querySelector('[data-screen="game"]').classList.contains('hidden')) {
+        showScreen('game');
+      }
+      renderOnline(pushState);
+    }
+  });
+}
+
+function renderOnline(pushState) {
+  renderBoard(state, myRole, { onPlayCard: (cardId) => onPlayCardOnline(cardId, pushState) });
+  if (state.winner) { showResult(state.winner === myRole ? 'あなた' : '相手'); return; }
+
+  // after counter resolved by opponent, the actor finalizes the turn
+  if (state.phase === 'main' && state.turn === myRole && state.lastActor === myRole) {
+    delete state.lastActor;
+    state = endTurn(state);
+    pushState(roomCode, state);
+    return;
+  }
+
+  // if I am the defender in an awaiting_counter, prompt me
+  if (state.phase === 'awaiting_counter' && state.pending.actor !== myRole) {
+    const counters = legalPlays(state, myRole);
+    const def = CARD_TYPES[cardKind(state.pending.cardId)];
+    if (counters.length > 0) {
+      showCounterPrompt(
+        def.name,
+        async () => { state = applyCounter(state, myRole, counters[0]); await afterCounter(pushState); },
+        async () => { state = applyCounter(state, myRole, null); await afterCounter(pushState); },
+      );
+    } else {
+      // no counter available: auto-resolve as defender
+      state = applyCounter(state, myRole, null);
+      afterCounter(pushState);
+    }
+  }
+}
+
+async function afterCounter(pushState) {
+  // defender resolved the counter; turn owner still needs to endTurn.
+  // The actor end-turns when they see phase back to main on their next render.
+  await pushState(roomCode, state);
+}
+
+function onPlayCardOnline(cardId, pushState) {
+  if (state.turn !== myRole || state.phase !== 'main') return;
+  if (!legalPlays(state, myRole).includes(cardId)) return;
+  let opts = {};
+  if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
+  state = playCard(state, myRole, cardId, opts);
+  state.lastActor = myRole;
+  pushState(roomCode, state).then(() => {
+    if (state.phase === 'main') {
+      // no counter needed; end my turn
+      state = endTurn(state);
+      pushState(roomCode, state);
+    }
+    // if awaiting_counter, defender will resolve; I endTurn when I next see main (handled in renderOnline)
   });
 }
 
@@ -84,4 +176,5 @@ function finishCpuTurn() {
 }
 
 wireMenu();
+wireOnline();
 showScreen('top');
