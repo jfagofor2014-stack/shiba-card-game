@@ -25,6 +25,9 @@ export async function createRoom() {
 export async function joinRoom(code) {
   const snap = await get(child(ref(db), `rooms/${code}`));
   if (!snap.exists()) throw new Error('部屋が見つかりません');
+  const room = snap.val();
+  if (room.status !== 'waiting') throw new Error('この部屋はすでに対戦中です');
+  if (room.players && room.players.guest) throw new Error('この部屋は満員です');
   const initial = createInitialState();
   await update(ref(db, `rooms/${code}`), {
     'players/guest': { name: 'guest', connected: true },

@@ -27,7 +27,7 @@ function wireMenu() {
 
 function wireOnline() {
   document.getElementById('btn-create').onclick = async () => {
-    const { createRoom, joinRoom, subscribe, pushState } = await import('./online.js');
+    const { createRoom, subscribe, pushState } = await import('./online.js');
     const { code, role } = await createRoom();
     roomCode = code; myRole = role;
     document.getElementById('online-status').textContent = `コード: ${code}（相手の参加を待っています）`;
@@ -36,7 +36,7 @@ function wireOnline() {
   document.getElementById('btn-join').onclick = async () => {
     const code = document.getElementById('join-code').value.trim();
     try {
-      const { createRoom, joinRoom, subscribe, pushState } = await import('./online.js');
+      const { joinRoom, subscribe, pushState } = await import('./online.js');
       const res = await joinRoom(code);
       roomCode = res.code; myRole = res.role;
       startOnline(subscribe, pushState);
@@ -63,16 +63,9 @@ async function renderOnline(pushState) {
   renderBoard(state, myRole, { onPlayCard: (cardId) => onPlayCardOnline(cardId, pushState) });
   if (state.winner) { showResult(state.winner === myRole ? 'あなた' : '相手'); return; }
 
-  // after counter resolved by opponent, the actor finalizes the turn
-  if (state.phase === 'main' && state.turn === myRole && state.lastActor === myRole) {
-    delete state.lastActor;
-    state = endTurn(state);
-    pushState(roomCode, state);
-    return;
-  }
-
-  // if I am the defender in an awaiting_counter, prompt me
-  if (state.phase === 'awaiting_counter' && state.pending.actor !== myRole) {
+  // if I am the defender in an awaiting_counter, I resolve the counter,
+  // run endTurn, and push the finalized next-turn state in a single write.
+  if (state.phase === 'awaiting_counter' && state.pending && state.pending.actor !== myRole) {
     const counters = legalPlays(state, myRole);
     const def = CARD_TYPES[cardKind(state.pending.cardId)];
     if (counters.length > 0) {
@@ -90,8 +83,10 @@ async function renderOnline(pushState) {
 }
 
 async function afterCounter(pushState) {
-  // defender resolved the counter; turn owner still needs to endTurn.
-  // The actor end-turns when they see phase back to main on their next render.
+  // The defender (this client) resolved the counter. Finalize the turn here and
+  // push once, so counter resolution is a single atomic write — no echo race,
+  // and the actor never finalizes.
+  if (!state.winner) state = endTurn(state);
   await pushState(roomCode, state);
 }
 
@@ -102,11 +97,11 @@ async function onPlayCardOnline(cardId, pushState) {
   if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
   state = playCard(state, myRole, cardId, opts);
   if (state.phase === 'awaiting_counter') {
-    // counterable card: set lastActor so actor finalizes after defender resolves
-    state.lastActor = myRole;
+    // counterable card: push awaiting_counter and do nothing else.
+    // The defender resolves the counter and finalizes the turn.
     await pushState(roomCode, state);
   } else {
-    // non-counterable card: end turn immediately, do NOT set lastActor
+    // non-counterable card: end turn immediately and push once.
     state = endTurn(state);
     await pushState(roomCode, state);
   }
