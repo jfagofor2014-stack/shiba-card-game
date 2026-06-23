@@ -49,6 +49,7 @@ function wireOnline() {
 }
 
 function startOnline(subscribe, pushState) {
+  setLabels('あなた', 'あいて');
   if (unsub) unsub();
   unsub = subscribe(roomCode, (room) => {
     if (room.status === 'playing' && room.state) {
@@ -119,6 +120,7 @@ async function onPlayCardOnline(cardId, pushState) {
 }
 
 function startCpuGame() {
+  setLabels('あなた', 'あいて');
   state = createInitialState();
   showScreen('game');
   refresh();
