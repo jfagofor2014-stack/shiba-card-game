@@ -86,3 +86,13 @@ export function showResult(winnerLabel) {
   document.getElementById('result-text').textContent = `${winnerLabel}の勝ち！🎉`;
   showScreen('result');
 }
+
+export function showHandoff(playerLabel, onReady) {
+  const root = document.getElementById('handoff-root');
+  root.innerHTML = `
+    <div class="handoff"><div class="handoff-box">
+      <p>📱 ${playerLabel} に渡してください</p>
+      <button id="handoff-ready">準備ができたらタップ</button>
+    </div></div>`;
+  document.getElementById('handoff-ready').onclick = () => { root.innerHTML = ''; onReady(); };
+}

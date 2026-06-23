@@ -1,7 +1,7 @@
-import { showScreen, renderBoard, showCounterPrompt, showResult, effectTextFor } from './ui.js';
+import { showScreen, renderBoard, showCounterPrompt, showResult, effectTextFor, showHandoff } from './ui.js';
 import {
   createInitialState, playCard, applyCounter, endTurn,
-  legalPlays, CARD_TYPES, cardKind,
+  legalPlays, CARD_TYPES, cardKind, opponent, setLabels,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
 
@@ -181,6 +181,77 @@ function finishCpuTurn() {
   if (!state.winner && state.turn === CPU) cpuTurn();
 }
 
+// Pass-and-play state
+const P_LABEL = { host: 'プレイヤー1', guest: 'プレイヤー2' };
+let holder = null;
+
+function wirePass() {
+  document.getElementById('btn-pass').onclick = startPassGame;
+}
+
+function startPassGame() {
+  setLabels('プレイヤー1', 'プレイヤー2');
+  state = createInitialState();
+  holder = 'host';
+  showScreen('game');
+  showHandoff(P_LABEL.host, renderPass);
+}
+
+function pendingActorPass() {
+  if (state.phase === 'awaiting_counter' && state.pending) return opponent(state.pending.actor);
+  return state.turn;
+}
+
+function renderPass() {
+  renderBoard(state, holder, { onPlayCard: onPlayCardPass });
+  if (state.winner) { showResult(P_LABEL[state.winner]); return; }
+
+  if (state.phase === 'awaiting_counter' && state.pending) {
+    const defender = opponent(state.pending.actor);
+    if (defender === holder) {
+      const counters = legalPlays(state, defender);
+      if (counters.length > 0) {
+        const def = CARD_TYPES[cardKind(state.pending.cardId)];
+        showCounterPrompt(
+          P_LABEL[state.pending.actor], def.name, effectTextFor(state.pending.cardId),
+          () => { state = applyCounter(state, defender, counters[0]); afterActionPass(); },
+          () => { state = applyCounter(state, defender, null); afterActionPass(); },
+        );
+      } else {
+        state = applyCounter(state, defender, null);
+        afterActionPass();
+      }
+    }
+  }
+}
+
+function onPlayCardPass(cardId) {
+  if (state.turn !== holder || state.phase !== 'main') return;
+  if (!legalPlays(state, holder).includes(cardId)) return;
+  let opts = {};
+  if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
+  state = playCard(state, holder, cardId, opts);
+  afterActionPass();
+}
+
+function afterActionPass() {
+  if (state.winner) { renderPass(); return; }
+
+  if (state.phase === 'awaiting_counter') {
+    const actor = opponent(state.pending.actor);
+    if (actor !== holder) { holder = actor; showHandoff(P_LABEL[actor], renderPass); }
+    else { renderPass(); }
+    return;
+  }
+
+  state = endTurn(state);
+  if (state.winner) { renderPass(); return; }
+  const next = state.turn;
+  if (next !== holder) { holder = next; showHandoff(P_LABEL[next], renderPass); }
+  else { renderPass(); }
+}
+
 wireMenu();
 wireOnline();
+wirePass();
 showScreen('top');

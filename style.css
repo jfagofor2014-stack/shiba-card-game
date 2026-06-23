@@ -44,3 +44,9 @@ input { font-size: 1.3rem; padding: 10px; width: 140px; text-align: center; bord
 .modal .box { background: #fff; padding: 20px; border-radius: 14px; text-align: center; max-width: 320px; }
 .modal .box button { margin: 8px; }
 .hidden { display: none; }
+
+.handoff { position: fixed; inset: 0; background: #3e2723; color: #fff;
+  display: flex; align-items: center; justify-content: center; z-index: 50; }
+.handoff-box { text-align: center; padding: 24px; }
+.handoff-box p { font-size: 1.3rem; margin-bottom: 20px; }
+.handoff-box button { font-size: 1.1rem; }
