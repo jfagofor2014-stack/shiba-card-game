@@ -165,6 +165,27 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
         s.log.push(`${label(who)}の「${CARD_TYPES.kangeki.name}」は隙間にすっぽりで無効化された`);
       }
       break;
+    case 'nusumi':
+      s = addScore(s, who, 1);
+      if (!hasSukima(s, opp)) {
+        s.scores[opp] = Math.max(0, s.scores[opp] - 1);
+      }
+      s.log.push(`${label(who)}は「${CARD_TYPES.nusumi.name}」で相手のスキを1奪った`);
+      break;
+    case 'yakimochi':
+      if (!hasSukima(s, opp)) {
+        s.scores[opp] = Math.max(0, s.scores[opp] - 2);
+        s.log.push(`${label(who)}は「${CARD_TYPES.yakimochi.name}」で相手のスキを2減らした`);
+      } else {
+        s.log.push(`${label(who)}の「${CARD_TYPES.yakimochi.name}」は隙間にすっぽりで無効化された`);
+      }
+      break;
+    case 'kuidame': {
+      const gain = Math.min(4, s.hands[who].length);
+      s = addScore(s, who, gain);
+      s.log.push(`${label(who)}は「${CARD_TYPES.kuidame.name}」でスキを${gain}こ獲得`);
+      break;
+    }
     default:
       break;
   }

@@ -309,6 +309,49 @@ test('setLabels changes the player names used in log lines', () => {
   setLabels('あなた', 'あいて'); // reset for other tests
 });
 
+test('nusumi steals 1 (self +1, opp -1)', () => {
+  const s = handWith(createInitialState(), 'host', 'nusumi_1');
+  s.scores.guest = 5;
+  const next = resolveEffect(s, 'host', 'nusumi_1');
+  assert.equal(next.scores.host, 1);
+  assert.equal(next.scores.guest, 4);
+});
+
+test('nusumi opp reduction clamps at 0 and is blocked by opp sukima (self +1 still applies)', () => {
+  const s = handWith(createInitialState(), 'host', 'nusumi_1');
+  s.scores.guest = 0;
+  const a = resolveEffect(s, 'host', 'nusumi_1');
+  assert.equal(a.scores.guest, 0); // clamped
+  assert.equal(a.scores.host, 1);
+  const s2 = handWith(createInitialState(), 'host', 'nusumi_1');
+  s2.scores.guest = 5; s2.field.guest.push('sukima_1');
+  const b = resolveEffect(s2, 'host', 'nusumi_1');
+  assert.equal(b.scores.guest, 5); // protected
+  assert.equal(b.scores.host, 1);  // self still gains
+});
+
+test('yakimochi reduces opp by 2, clamps, blocked by sukima', () => {
+  const s = handWith(createInitialState(), 'host', 'yakimochi_1');
+  s.scores.guest = 5;
+  assert.equal(resolveEffect(s, 'host', 'yakimochi_1').scores.guest, 3);
+  const s0 = handWith(createInitialState(), 'host', 'yakimochi_1');
+  s0.scores.guest = 1;
+  assert.equal(resolveEffect(s0, 'host', 'yakimochi_1').scores.guest, 0);
+  const sk = handWith(createInitialState(), 'host', 'yakimochi_1');
+  sk.scores.guest = 5; sk.field.guest.push('sukima_1');
+  assert.equal(resolveEffect(sk, 'host', 'yakimochi_1').scores.guest, 5);
+});
+
+test('kuidame scores hand size after playing, max 4', () => {
+  const s = createInitialState();
+  s.hands.host = ['kuidame_1', 'hikoki_2', 'hikoki_3']; // after play: 2 cards left
+  const next = resolveEffect(s, 'host', 'kuidame_1');
+  assert.equal(next.scores.host, 2);
+  const big = createInitialState();
+  big.hands.host = ['kuidame_1', 'hikoki_2', 'hikoki_3', 'hikoki_4', 'hikoki_5', 'hikoki_6']; // 5 left -> capped 4
+  assert.equal(resolveEffect(big, 'host', 'kuidame_1').scores.host, 4);
+});
+
 test('endTurn consuming a skip appends a log entry containing 1回休み', () => {
   let s = createInitialState();
   s.skipNext.guest = true;
