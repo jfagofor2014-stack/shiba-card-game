@@ -1,7 +1,7 @@
 import { showScreen, renderBoard, showCounterPrompt, showResult, effectTextFor, showHandoff } from './ui.js';
 import {
   createInitialState, playCard, applyCounter, endTurn,
-  legalPlays, CARD_TYPES, cardKind, opponent, setLabels,
+  legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
 
@@ -112,6 +112,9 @@ async function onPlayCardOnline(cardId, pushState) {
     // counterable card: push awaiting_counter and do nothing else.
     // The defender resolves the counter and finalizes the turn.
     await pushState(roomCode, state);
+  } else if (state.turn === myRole && state.extraActions > 0) {
+    state = consumeExtraAction(state);
+    await pushState(roomCode, state);
   } else {
     // non-counterable card: end turn immediately and push once.
     state = endTurn(state);
@@ -149,6 +152,12 @@ function onPlayCard(cardId) {
     const cpuCounter = chooseCounter(state, CPU, difficulty);
     state = applyCounter(state, CPU, cpuCounter);
   }
+  // 追加行動が残るなら手番を終えず、人間がもう1枚出せる
+  if (!state.winner && state.turn === HUMAN && state.extraActions > 0) {
+    state = consumeExtraAction(state);
+    refresh();
+    return;
+  }
   if (!state.winner) state = endTurn(state);
   refresh();
   if (!state.winner) cpuTurn();
@@ -178,6 +187,12 @@ function cpuTurn() {
 }
 
 function finishCpuTurn() {
+  if (!state.winner && state.turn === CPU && state.extraActions > 0) {
+    state = consumeExtraAction(state);
+    refresh();
+    cpuTurn();
+    return;
+  }
   if (!state.winner) state = endTurn(state);
   refresh();
   if (!state.winner && state.turn === CPU) cpuTurn();
@@ -239,6 +254,13 @@ function afterActionPass() {
     const actor = opponent(state.pending.actor);
     if (actor !== holder) { holder = actor; showHandoff(P_LABEL[actor], renderPass); }
     else { renderPass(); }
+    return;
+  }
+
+  // 追加行動: 同じプレイヤーが受け渡し無しで続行
+  if (state.turn === holder && state.extraActions > 0) {
+    state = consumeExtraAction(state);
+    renderPass();
     return;
   }
 
