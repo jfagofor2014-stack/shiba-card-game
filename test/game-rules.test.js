@@ -4,6 +4,9 @@ import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards
 
 function handWith(state, who, cardId) {
   const s = JSON.parse(JSON.stringify(state));
+  // Remove any randomly-dealt copy of cardId first so placing it at index 0
+  // cannot create a duplicate (which would make discardFromHand leave one behind).
+  s.hands[who] = s.hands[who].filter((id) => id !== cardId);
   s.hands[who][0] = cardId;
   return s;
 }
