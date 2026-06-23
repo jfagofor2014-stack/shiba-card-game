@@ -19,9 +19,11 @@ test('buildDeck has exactly 40 cards', () => {
 test('buildDeck has correct per-kind counts', () => {
   const deck = buildDeck();
   const count = (k) => deck.filter((id) => cardKind(id) === k).length;
-  assert.equal(count('hikoki'), 6);
-  assert.equal(count('hesoten'), 4);
-  assert.equal(count('kangeki'), 2);
+  assert.equal(count('hikoki'), 8);
+  assert.equal(count('hesoten'), 6);
+  assert.equal(count('kyohi'), 3);
+  assert.equal(count('kyomu'), 2);
+  assert.equal(count('kangeki'), 3);
 });
 
 test('shuffle is deterministic with a seeded rng and non-destructive', () => {
