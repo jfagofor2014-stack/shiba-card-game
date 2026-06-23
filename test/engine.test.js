@@ -33,3 +33,16 @@ test('multiple seeds all complete without throwing', () => {
     assert.ok(final.scores[final.winner] >= 20, `seed ${base} winner below 20`);
   }
 });
+
+test('CPU vs CPU completes even with expansion deck (multiple seeds)', () => {
+  for (let base = 1; base <= 20; base++) {
+    let seed = base * 7919;
+    const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const final = playOutGame(
+      { host: aiController('normal', rng), guest: aiController('easy', rng) },
+      rng,
+    );
+    assert.ok(final.winner, `seed ${base} no winner`);
+    assert.ok(final.scores[final.winner] >= 20, `seed ${base} winner below 20`);
+  }
+});

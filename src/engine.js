@@ -1,17 +1,26 @@
-import { createInitialState, playCard, applyCounter, endTurn, opponent } from './game-rules.js';
+import { createInitialState, playCard, applyCounter, endTurn, opponent, consumeExtraAction } from './game-rules.js';
 
 export function takeTurn(state, controllers, rng = Math.random) {
   if (state.winner) return state;
   const who = state.turn;
-  const { cardId, opts } = controllers[who].main(state, who);
-  if (!cardId) return endTurn(state, rng); // no legal move, pass
+  let s = state;
 
-  let s = playCard(state, who, cardId, opts, rng);
-
-  if (s.phase === 'awaiting_counter') {
-    const defender = opponent(s.pending.actor);
-    const counterCard = controllers[defender].counter(s, defender);
-    s = applyCounter(s, defender, counterCard, rng);
+  // The active player may take extra actions (おかわり) before the turn ends.
+  while (true) {
+    const { cardId, opts } = controllers[who].main(s, who);
+    if (!cardId) break; // no legal move -> pass
+    s = playCard(s, who, cardId, opts, rng);
+    if (s.phase === 'awaiting_counter') {
+      const defender = opponent(s.pending.actor);
+      const counterCard = controllers[defender].counter(s, defender);
+      s = applyCounter(s, defender, counterCard, rng);
+    }
+    if (s.winner) return s;
+    if (s.extraActions > 0 && s.turn === who && !s.forceEndTurn) {
+      s = consumeExtraAction(s);
+      continue; // same player plays again, no endTurn
+    }
+    break;
   }
   if (s.winner) return s;
   return endTurn(s, rng);
