@@ -1,8 +1,11 @@
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `shiba-${VERSION}`;
 const ASSETS = [
   './', './index.html', './style.css', './manifest.json',
   './src/main.js', './src/ui.js', './src/game-rules.js', './src/ai.js',
+  './img/hikoki.jpg', './img/hesoten.jpg', './img/kyohi.jpg',
+  './img/kyomu.jpg', './img/shibakyori.jpg', './img/sukima.jpg',
+  './img/drill.jpg', './img/zoomies.jpg', './img/kangeki.jpg',
 ];
 
 self.addEventListener('install', (e) => {

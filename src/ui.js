@@ -14,9 +14,7 @@ export function renderCard(cardId) {
   el.className = `card ${def.category}`;
   el.dataset.cardId = cardId;
   el.innerHTML = `
-    <div class="card-art"></div>
-    <div class="emoji">${def.emoji}</div>
-    <div class="name">${def.name}</div>
+    <div class="card-art"><img src="img/${kind}.jpg" alt="${def.name}"></div>
     <div class="effect">${EFFECT_TEXT[kind]}</div>`;
   return el;
 }
