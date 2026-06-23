@@ -197,10 +197,6 @@ function startPassGame() {
   showHandoff(P_LABEL.host, renderPass);
 }
 
-function pendingActorPass() {
-  if (state.phase === 'awaiting_counter' && state.pending) return opponent(state.pending.actor);
-  return state.turn;
-}
 
 function renderPass() {
   renderBoard(state, holder, { onPlayCard: onPlayCardPass });
@@ -237,7 +233,7 @@ function onPlayCardPass(cardId) {
 function afterActionPass() {
   if (state.winner) { renderPass(); return; }
 
-  if (state.phase === 'awaiting_counter') {
+  if (state.phase === 'awaiting_counter' && state.pending) {
     const actor = opponent(state.pending.actor);
     if (actor !== holder) { holder = actor; showHandoff(P_LABEL[actor], renderPass); }
     else { renderPass(); }
