@@ -5,17 +5,31 @@ const EFFECT_TEXT = {
   kyomu: '妨害を無効化', shibakyori: 'スキ+1 & 相手手札1枚捨て',
   sukima: '次の自分の番まで効果を受けない', drill: '捨てた枚数+1引く',
   zoomies: '甘えならスキ+5 / 外れで終了', kangeki: '相手1回休み',
+  nusumi: '相手のスキを1奪う', yakimochi: '相手のスキを2減らす',
+  itazura: '相手の手札を2枚捨て', dassou: '手札を引き直す',
+  kunkun: '相手の手札を見る & 1枚引く', kokan: '手札を1枚交換',
+  kuidame: '手札の枚数ぶんスキ(最大4)', okawari: 'もう1枚出せる',
 };
+
+const IMAGE_KINDS = new Set(['hikoki','hesoten','kyohi','kyomu','shibakyori','sukima','drill','zoomies','kangeki']);
 
 export function renderCard(cardId) {
   const kind = cardKind(cardId);
   const def = CARD_TYPES[kind];
   const el = document.createElement('div');
-  el.className = `card ${def.category}`;
   el.dataset.cardId = cardId;
-  el.innerHTML = `
-    <div class="card-art"><img src="img/${kind}.jpg" alt="${def.name}"></div>
-    <div class="effect">${EFFECT_TEXT[kind]}</div>`;
+  if (IMAGE_KINDS.has(kind)) {
+    el.className = `card ${def.category}`;
+    el.innerHTML = `
+      <div class="card-art"><img src="img/${kind}.jpg" alt="${def.name}"></div>
+      <div class="effect">${EFFECT_TEXT[kind]}</div>`;
+  } else {
+    el.className = `card text-card ${def.category}`;
+    el.innerHTML = `
+      <div class="emoji">${def.emoji}</div>
+      <div class="name">${def.name}</div>
+      <div class="effect">${EFFECT_TEXT[kind]}</div>`;
+  }
   return el;
 }
 
@@ -35,6 +49,13 @@ export function renderBoard(state, viewer, handlers) {
   fieldMine.innerHTML = ''; fieldOpp.innerHTML = '';
   state.field[viewer].forEach((id) => fieldMine.appendChild(renderCard(id)));
   state.field[opp].forEach((id) => fieldOpp.appendChild(renderCard(id)));
+  if (state.reveal && state.reveal[viewer]) {
+    state.hands[opp].forEach((id) => {
+      const c = renderCard(id);
+      c.classList.add('peek');
+      fieldOpp.appendChild(c);
+    });
+  }
 
   const hand = document.getElementById('hand');
   hand.innerHTML = '';
