@@ -171,12 +171,13 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
   return s;
 }
 
-const SCORE_CARDS = new Set(['hikoki', 'hesoten', 'shibakyori', 'zoomies']);
+const SCORE_CARDS = new Set(['hikoki', 'hesoten', 'shibakyori', 'zoomies', 'nusumi', 'kuidame']);
+const SABOTAGE_CARDS = new Set(['kangeki', 'yakimochi', 'itazura']);
 
 export function needsCounter(cardId) {
   const kind = cardKind(cardId);
   if (SCORE_CARDS.has(kind)) return 'score';
-  if (kind === 'kangeki') return 'sabotage';
+  if (SABOTAGE_CARDS.has(kind)) return 'sabotage';
   return null;
 }
 

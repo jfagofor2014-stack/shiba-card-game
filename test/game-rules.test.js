@@ -191,6 +191,17 @@ test('needsCounter classifies cards', () => {
   assert.equal(needsCounter('drill_1'), null);
 });
 
+test('needsCounter classifies expansion cards', () => {
+  assert.equal(needsCounter('nusumi_1'), 'score');
+  assert.equal(needsCounter('kuidame_1'), 'score');
+  assert.equal(needsCounter('yakimochi_1'), 'sabotage');
+  assert.equal(needsCounter('itazura_1'), 'sabotage');
+  assert.equal(needsCounter('dassou_1'), null);
+  assert.equal(needsCounter('kunkun_1'), null);
+  assert.equal(needsCounter('kokan_1'), null);
+  assert.equal(needsCounter('okawari_1'), null);
+});
+
 test('playCard on score card enters awaiting_counter without applying', () => {
   const s = createInitialState();
   s.hands.host[0] = 'hikoki_1';
