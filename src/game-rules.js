@@ -186,6 +186,43 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
       s.log.push(`${label(who)}は「${CARD_TYPES.kuidame.name}」でスキを${gain}こ獲得`);
       break;
     }
+    case 'itazura':
+      if (!hasSukima(s, opp)) {
+        let n = 0;
+        while (n < 2 && s.hands[opp].length > 0) {
+          const j = Math.floor(rng() * s.hands[opp].length);
+          s.discard.push(s.hands[opp].splice(j, 1)[0]);
+          n++;
+        }
+        s.log.push(`${label(who)}は「${CARD_TYPES.itazura.name}」で相手の手札を${n}枚捨てさせた`);
+      } else {
+        s.log.push(`${label(who)}の「${CARD_TYPES.itazura.name}」は隙間にすっぽりで無効化された`);
+      }
+      break;
+    case 'dassou': {
+      while (s.hands[who].length > 0) s.discard.push(s.hands[who].pop());
+      s = drawCards(s, who, 5, rng);
+      s.log.push(`${label(who)}は「${CARD_TYPES.dassou.name}」で手札を引き直した`);
+      break;
+    }
+    case 'kokan':
+      if (!hasSukima(s, opp) && s.hands[who].length > 0 && s.hands[opp].length > 0) {
+        const i = Math.floor(rng() * s.hands[who].length);
+        const j = Math.floor(rng() * s.hands[opp].length);
+        const mine = s.hands[who].splice(i, 1)[0];
+        const theirs = s.hands[opp].splice(j, 1)[0];
+        s.hands[who].push(theirs);
+        s.hands[opp].push(mine);
+        s.log.push(`${label(who)}は「${CARD_TYPES.kokan.name}」で手札を1枚交換した`);
+      } else {
+        s.log.push(`${label(who)}は「${CARD_TYPES.kokan.name}」を出したが交換できなかった`);
+      }
+      break;
+    case 'kunkun':
+      s.reveal[who] = true;
+      s = drawCards(s, who, 1, rng);
+      s.log.push(`${label(who)}は「${CARD_TYPES.kunkun.name}」で相手の手札をのぞき見した`);
+      break;
     default:
       break;
   }

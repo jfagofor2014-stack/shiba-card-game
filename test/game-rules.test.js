@@ -352,6 +352,45 @@ test('kuidame scores hand size after playing, max 4', () => {
   assert.equal(resolveEffect(big, 'host', 'kuidame_1').scores.host, 4);
 });
 
+test('itazura discards up to 2 random opponent cards, blocked by sukima', () => {
+  const s = createInitialState();
+  s.hands.host = ['itazura_1'];
+  s.hands.guest = ['hikoki_2', 'hikoki_3', 'hikoki_4'];
+  const next = resolveEffect(s, 'host', 'itazura_1', {}, () => 0);
+  assert.equal(next.hands.guest.length, 1);
+  const sk = createInitialState();
+  sk.hands.host = ['itazura_1']; sk.hands.guest = ['hikoki_2', 'hikoki_3'];
+  sk.field.guest.push('sukima_1');
+  assert.equal(resolveEffect(sk, 'host', 'itazura_1', {}, () => 0).hands.guest.length, 2);
+});
+
+test('dassou discards whole hand and draws 5', () => {
+  const s = createInitialState();
+  s.hands.host = ['dassou_1', 'hikoki_2', 'hikoki_3'];
+  const next = resolveEffect(s, 'host', 'dassou_1');
+  assert.equal(next.hands.host.length, 5);
+  assert.ok(!next.hands.host.includes('dassou_1'));
+});
+
+test('kokan swaps one random card each way and sets nothing when a hand is empty', () => {
+  const s = createInitialState();
+  s.hands.host = ['kokan_1', 'hikoki_2'];
+  s.hands.guest = ['hesoten_2'];
+  const next = resolveEffect(s, 'host', 'kokan_1', {}, () => 0);
+  assert.equal(next.hands.host.length, 1); // played kokan(-1), gave 1, received 1 => 1
+  assert.equal(next.hands.guest.length, 1);
+  assert.ok(next.hands.host.includes('hesoten_2'));
+});
+
+test('kunkun sets reveal flag and draws 1', () => {
+  const s = createInitialState();
+  s.hands.host = ['kunkun_1'];
+  const before = s.hands.host.length;
+  const next = resolveEffect(s, 'host', 'kunkun_1');
+  assert.equal(next.reveal.host, true);
+  assert.equal(next.hands.host.length, before); // -1 played +1 drawn
+});
+
 test('endTurn consuming a skip appends a log entry containing 1回休み', () => {
   let s = createInitialState();
   s.skipNext.guest = true;
