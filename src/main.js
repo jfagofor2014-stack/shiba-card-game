@@ -1,4 +1,4 @@
-import { showScreen, renderBoard, showCounterPrompt, showResult } from './ui.js';
+import { showScreen, renderBoard, showCounterPrompt, showResult, effectTextFor } from './ui.js';
 import {
   createInitialState, playCard, applyCounter, endTurn,
   legalPlays, CARD_TYPES, cardKind,
@@ -79,7 +79,7 @@ async function renderOnline(pushState) {
     const def = CARD_TYPES[cardKind(state.pending.cardId)];
     if (counters.length > 0) {
       showCounterPrompt(
-        def.name,
+        'あいて', def.name, effectTextFor(state.pending.cardId),
         async () => { state = applyCounter(state, myRole, counters[0]); await afterCounter(pushState); resolvingCounter = false; },
         async () => { state = applyCounter(state, myRole, null); await afterCounter(pushState); resolvingCounter = false; },
       );
@@ -163,7 +163,7 @@ function cpuTurn() {
     if (humanCounters.length > 0) {
       const def = CARD_TYPES[cardKind(state.pending.cardId)];
       showCounterPrompt(
-        def.name,
+        'あいて', def.name, effectTextFor(state.pending.cardId),
         () => { state = applyCounter(state, HUMAN, humanCounters[0]); finishCpuTurn(); },
         () => { state = applyCounter(state, HUMAN, null); finishCpuTurn(); },
       );

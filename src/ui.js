@@ -46,16 +46,35 @@ export function renderBoard(state, viewer, handlers) {
     hand.appendChild(c);
   });
 
+  // status bar: turn indicator (viewer-relative) + latest event
+  const status = document.getElementById('status');
+  if (state.winner) {
+    status.textContent = '';
+    status.className = 'status';
+  } else {
+    const myTurn = state.turn === viewer;
+    const last = state.log.length ? state.log[state.log.length - 1] : '';
+    status.textContent = (myTurn ? '🐕 あなたの番です' : '⏳ あいての番…') + (last ? `　／　${last}` : '');
+    status.className = 'status ' + (myTurn ? 'my-turn' : 'opp-turn');
+  }
+
   const log = document.getElementById('log');
-  log.innerHTML = state.log.slice(-8).map((l) => `<div>${l}</div>`).join('');
+  const total = state.log.length;
+  const shown = state.log.slice(-6);
+  const startNo = total - shown.length + 1;
+  log.innerHTML = shown.map((l, i) => `<div>${startNo + i}. ${l}</div>`).join('');
   log.scrollTop = log.scrollHeight;
 }
 
-export function showCounterPrompt(cardName, onYes, onNo) {
+export function effectTextFor(cardId) {
+  return EFFECT_TEXT[cardKind(cardId)];
+}
+
+export function showCounterPrompt(actorLabel, cardName, effectText, onYes, onNo) {
   const root = document.getElementById('modal-root');
   root.innerHTML = `
     <div class="modal"><div class="box">
-      <p><strong>${cardName}</strong> が出されました！<br>無効化しますか?</p>
+      <p>${actorLabel}が <strong>${cardName}</strong> を出しました<br>（${effectText}）<br>無効化しますか?</p>
       <button id="cnt-yes">はい</button>
       <button id="cnt-no">いいえ</button>
     </div></div>`;
