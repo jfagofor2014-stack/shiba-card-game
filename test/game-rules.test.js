@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn, legalPlays, setLabels } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn, legalPlays, setLabels, consumeExtraAction } from '../src/game-rules.js';
 
 function handWith(state, who, cardId) {
   const s = JSON.parse(JSON.stringify(state));
@@ -398,4 +398,27 @@ test('endTurn consuming a skip appends a log entry containing 1回休み', () =>
   s = endTurn(s);
   assert.ok(s.log.length > before);
   assert.ok(s.log.some((line) => line.includes('1回休み')));
+});
+
+test('okawari increments extraActions', () => {
+  const s = handWith(createInitialState(), 'host', 'okawari_1');
+  const next = resolveEffect(s, 'host', 'okawari_1');
+  assert.equal(next.extraActions, 1);
+});
+
+test('consumeExtraAction decrements, not below 0', () => {
+  const s = createInitialState();
+  s.extraActions = 2;
+  assert.equal(consumeExtraAction(s).extraActions, 1);
+  const z = createInitialState();
+  assert.equal(consumeExtraAction(z).extraActions, 0);
+});
+
+test('endTurn clears reveal for the player whose turn begins', () => {
+  let s = createInitialState(); // turn host
+  s.reveal.host = true;
+  s = endTurn(s); // host ends -> guest turn; host reveal persists through guest turn
+  assert.equal(s.reveal.host, true);
+  s = endTurn(s); // guest ends -> host turn begins -> clear host reveal
+  assert.equal(s.reveal.host, false);
 });

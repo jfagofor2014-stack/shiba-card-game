@@ -223,6 +223,10 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
       s = drawCards(s, who, 1, rng);
       s.log.push(`${label(who)}は「${CARD_TYPES.kunkun.name}」で相手の手札をのぞき見した`);
       break;
+    case 'okawari':
+      s.extraActions += 1;
+      s.log.push(`${label(who)}は「${CARD_TYPES.okawari.name}」でもう1枚出せる`);
+      break;
     default:
       break;
   }
@@ -285,6 +289,13 @@ export function endTurn(state, rng = Math.random) {
     nextTurn = who;
   }
   s.turn = nextTurn;
+  if (s.reveal[nextTurn]) s.reveal[nextTurn] = false;
+  return s;
+}
+
+export function consumeExtraAction(state) {
+  const s = clone(state);
+  s.extraActions = Math.max(0, (s.extraActions || 0) - 1);
   return s;
 }
 
