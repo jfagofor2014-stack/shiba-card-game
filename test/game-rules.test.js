@@ -8,22 +8,45 @@ function handWith(state, who, cardId) {
   return s;
 }
 
-test('CARD_TYPES exposes the 9 card kinds', () => {
-  assert.equal(Object.keys(CARD_TYPES).length, 9);
+test('CARD_TYPES exposes the 17 card kinds', () => {
+  assert.equal(Object.keys(CARD_TYPES).length, 17);
 });
 
-test('buildDeck has exactly 40 cards', () => {
-  assert.equal(buildDeck().length, 40);
+test('buildDeck has exactly 52 cards', () => {
+  assert.equal(buildDeck().length, 52);
 });
 
 test('buildDeck has correct per-kind counts', () => {
   const deck = buildDeck();
   const count = (k) => deck.filter((id) => cardKind(id) === k).length;
-  assert.equal(count('hikoki'), 8);
-  assert.equal(count('hesoten'), 6);
+  assert.equal(count('hikoki'), 6);
+  assert.equal(count('hesoten'), 5);
   assert.equal(count('kyohi'), 3);
   assert.equal(count('kyomu'), 2);
   assert.equal(count('kangeki'), 3);
+});
+
+test('deck has exactly 52 cards after expansion', () => {
+  assert.equal(buildDeck().length, 52);
+});
+
+test('new card kinds exist with correct counts', () => {
+  const deck = buildDeck();
+  const count = (k) => deck.filter((id) => cardKind(id) === k).length;
+  assert.equal(count('nusumi'), 3);
+  assert.equal(count('yakimochi'), 2);
+  assert.equal(count('itazura'), 2);
+  assert.equal(count('dassou'), 2);
+  assert.equal(count('kunkun'), 2);
+  assert.equal(count('kokan'), 2);
+  assert.equal(count('kuidame'), 3);
+  assert.equal(count('okawari'), 2);
+});
+
+test('createInitialState includes extraActions and reveal', () => {
+  const s = createInitialState();
+  assert.equal(s.extraActions, 0);
+  assert.deepEqual(s.reveal, { host: false, guest: false });
 });
 
 test('shuffle is deterministic with a seeded rng and non-destructive', () => {
@@ -31,8 +54,8 @@ test('shuffle is deterministic with a seeded rng and non-destructive', () => {
   let seed = 0.5;
   const rng = () => { seed = (seed * 9301 + 49297) % 233280 / 233280; return seed; };
   const shuffled = shuffle(deck, rng);
-  assert.equal(shuffled.length, 40);
-  assert.equal(deck.length, 40); // original untouched
+  assert.equal(shuffled.length, 52);
+  assert.equal(deck.length, 52); // original untouched
   assert.notDeepEqual(shuffled, deck);
 });
 
@@ -40,7 +63,7 @@ test('createInitialState deals 5 cards to each player', () => {
   const s = createInitialState();
   assert.equal(s.hands.host.length, 5);
   assert.equal(s.hands.guest.length, 5);
-  assert.equal(s.deck.length, 30);
+  assert.equal(s.deck.length, 42);
   assert.equal(s.scores.host, 0);
   assert.equal(s.turn, 'host');
   assert.equal(s.phase, 'main');

@@ -5,15 +5,23 @@ export function setLabels(hostLabel, guestLabel) {
 function label(role) { return LABELS[role]; }
 
 export const CARD_TYPES = {
-  hikoki:   { name: 'ヒコーキ耳',       category: 'amae',      count: 8, emoji: '🐕', color: 'pink' },
-  hesoten:  { name: 'へそ天',           category: 'amae',      count: 6, emoji: '🐶', color: 'pink' },
-  kyohi:    { name: '拒否柴（不動柴）', category: 'kyohi',     count: 3, emoji: '🛑', color: 'blue' },
-  kyomu:    { name: '虚無顔',           category: 'kyohi',     count: 2, emoji: '😶', color: 'blue' },
-  shibakyori:{ name: '柴距離',          category: 'mypace',    count: 6, emoji: '↔️', color: 'green' },
-  sukima:   { name: '隙間にすっぽり',   category: 'mypace',    count: 4, emoji: '📦', color: 'green' },
-  drill:    { name: '柴ドリル',         category: 'wild',      count: 4, emoji: '🌀', color: 'orange' },
-  zoomies:  { name: '柴走り',           category: 'wild',      count: 4, emoji: '💨', color: 'orange' },
-  kangeki:  { name: '無限換毛期',       category: 'wild',      count: 3, emoji: '🌾', color: 'orange' },
+  hikoki:    { name: 'ヒコーキ耳',       category: 'amae',      count: 6, emoji: '🐕', color: 'pink' },
+  hesoten:   { name: 'へそ天',           category: 'amae',      count: 5, emoji: '🐶', color: 'pink' },
+  kyohi:     { name: '拒否柴（不動柴）', category: 'kyohi',     count: 3, emoji: '🛑', color: 'blue' },
+  kyomu:     { name: '虚無顔',           category: 'kyohi',     count: 2, emoji: '😶', color: 'blue' },
+  shibakyori: { name: '柴距離',          category: 'mypace',    count: 5, emoji: '↔️', color: 'green' },
+  sukima:    { name: '隙間にすっぽり',   category: 'mypace',    count: 3, emoji: '📦', color: 'green' },
+  drill:     { name: '柴ドリル',         category: 'wild',      count: 3, emoji: '🌀', color: 'orange' },
+  zoomies:   { name: '柴走り',           category: 'wild',      count: 4, emoji: '💨', color: 'orange' },
+  kangeki:   { name: '無限換毛期',       category: 'wild',      count: 3, emoji: '🌾', color: 'orange' },
+  nusumi:    { name: '盗み食い',         category: 'wild',      count: 3, emoji: '🍖', color: 'orange' },
+  yakimochi: { name: 'ヤキモチ',         category: 'wild',      count: 2, emoji: '😤', color: 'orange' },
+  itazura:   { name: 'イタズラ',         category: 'mypace',    count: 2, emoji: '😈', color: 'green' },
+  dassou:    { name: '脱走',             category: 'wild',      count: 2, emoji: '🏃', color: 'orange' },
+  kunkun:    { name: 'クンクン',         category: 'mypace',    count: 2, emoji: '👃', color: 'green' },
+  kokan:     { name: '物々交換',         category: 'mypace',    count: 2, emoji: '🔄', color: 'green' },
+  kuidame:   { name: '食いだめ',         category: 'amae',      count: 3, emoji: '🍚', color: 'pink' },
+  okawari:   { name: 'おかわり',         category: 'amae',      count: 2, emoji: '♻️', color: 'pink' },
 };
 
 export function cardKind(cardId) {
@@ -47,6 +55,8 @@ export function createInitialState(rng = Math.random) {
     turn: 'host', phase: 'main',
     pending: null, winner: null,
     skipNext: { host: false, guest: false },
+    extraActions: 0,
+    reveal: { host: false, guest: false },
     log: [],
   };
 }
