@@ -1,10 +1,10 @@
 import { CARD_TYPES, cardKind } from './game-rules.js';
 
 const EFFECT_TEXT = {
-  hikoki: '+2点', hesoten: '+3点 & 1枚引く', kyohi: '相手の得点を無効化',
-  kyomu: '妨害を無効化', shibakyori: '+1点 & 相手手札1枚捨て',
+  hikoki: 'スキ+2', hesoten: 'スキ+3 & 1枚引く', kyohi: '相手の得点を無効化',
+  kyomu: '妨害を無効化', shibakyori: 'スキ+1 & 相手手札1枚捨て',
   sukima: '次の自分の番まで効果を受けない', drill: '捨てた枚数+1引く',
-  zoomies: '甘えなら+5点/外れで終了', kangeki: '相手1回休み',
+  zoomies: '甘えならスキ+5 / 外れで終了', kangeki: '相手1回休み',
 };
 
 export function renderCard(cardId) {
@@ -30,7 +30,7 @@ export function showScreen(name) {
 export function renderBoard(state, viewer, handlers) {
   const opp = viewer === 'host' ? 'guest' : 'host';
   document.getElementById('scoreboard').textContent =
-    `あなた ${state.scores[viewer]} - ${state.scores[opp]} 相手`;
+    `あなた スキ${state.scores[viewer]} - スキ${state.scores[opp]} あいて`;
 
   const fieldMine = document.getElementById('my-field');
   const fieldOpp = document.getElementById('opp-field');

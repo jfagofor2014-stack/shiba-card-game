@@ -1,4 +1,8 @@
-function label(role) { return role === 'host' ? 'あなた' : 'あいて'; }
+let LABELS = { host: 'あなた', guest: 'あいて' };
+export function setLabels(hostLabel, guestLabel) {
+  LABELS = { host: hostLabel, guest: guestLabel };
+}
+function label(role) { return LABELS[role]; }
 
 export const CARD_TYPES = {
   hikoki:   { name: 'ヒコーキ耳',       category: 'amae',      count: 8, emoji: '🐕', color: 'pink' },
@@ -98,17 +102,17 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
   switch (kind) {
     case 'hikoki':
       s = addScore(s, who, 2);
-      s.log.push(`${label(who)}は「${CARD_TYPES.hikoki.name}」で2点獲得`);
+      s.log.push(`${label(who)}は「${CARD_TYPES.hikoki.name}」でスキを2こ獲得`);
       break;
     case 'hesoten':
       s = addScore(s, who, 3);
       s = drawCards(s, who, 1, rng);
-      s.log.push(`${label(who)}は「${CARD_TYPES.hesoten.name}」で3点獲得し1枚引いた`);
+      s.log.push(`${label(who)}は「${CARD_TYPES.hesoten.name}」でスキを3こ獲得し1枚引いた`);
       break;
     case 'shibakyori': {
       const oppHandBefore = s.hands[opp].length;
       s = addScore(s, who, 1);
-      let shibaLine = `${label(who)}は「${CARD_TYPES.shibakyori.name}」で1点獲得`;
+      let shibaLine = `${label(who)}は「${CARD_TYPES.shibakyori.name}」でスキを1こ獲得`;
       if (!hasSukima(s, opp) && s.hands[opp].length > 0) {
         const j = Math.floor(rng() * s.hands[opp].length);
         const removed = s.hands[opp].splice(j, 1)[0];
@@ -135,7 +139,7 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
         s.discard.push(top);
         if (CARD_TYPES[cardKind(top)].category === 'amae') {
           s = addScore(s, who, 5);
-          s.log.push(`${label(who)}は「${CARD_TYPES.zoomies.name}」で5点獲得！`);
+          s.log.push(`${label(who)}は「${CARD_TYPES.zoomies.name}」でスキを5こ獲得！`);
         } else {
           s.forceEndTurn = true;
           s.log.push(`${label(who)}は「${CARD_TYPES.zoomies.name}」に失敗しターン終了`);

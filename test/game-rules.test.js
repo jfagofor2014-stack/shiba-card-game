@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn, legalPlays } from '../src/game-rules.js';
+import { CARD_TYPES, buildDeck, shuffle, cardKind, createInitialState, drawCards, addScore, opponent, resolveEffect, needsCounter, playCard, applyCounter, endTurn, legalPlays, setLabels } from '../src/game-rules.js';
 
 function handWith(state, who, cardId) {
   const s = JSON.parse(JSON.stringify(state));
@@ -264,6 +264,15 @@ test('applyCounter nullify path appends a log entry containing 無効化', () =>
   s = applyCounter(s, 'guest', 'kyohi_1');
   assert.ok(s.log.length > before);
   assert.ok(s.log.some((line) => line.includes('無効化')));
+});
+
+test('setLabels changes the player names used in log lines', () => {
+  setLabels('プレイヤー1', 'プレイヤー2');
+  const s = handWith(createInitialState(), 'host', 'hikoki_1');
+  const next = resolveEffect(s, 'host', 'hikoki_1');
+  assert.ok(next.log[next.log.length - 1].includes('プレイヤー1'));
+  assert.ok(next.log[next.log.length - 1].includes('スキ'));
+  setLabels('あなた', 'あいて'); // reset for other tests
 });
 
 test('endTurn consuming a skip appends a log entry containing 1回休み', () => {
