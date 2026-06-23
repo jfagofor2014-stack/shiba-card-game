@@ -1,6 +1,7 @@
 import { legalPlays, cardKind, opponent } from './game-rules.js';
 
-const SCORE_VALUE = { hesoten: 3, hikoki: 2, zoomies: 2, shibakyori: 1 };
+const SCORE_VALUE = { hesoten: 3, hikoki: 2, zoomies: 2, shibakyori: 1, nusumi: 2, kuidame: 2 };
+const SABOTAGE_KINDS = ['kangeki', 'yakimochi', 'itazura', 'shibakyori'];
 
 function pickRandom(arr, rng) {
   return arr[Math.floor(rng() * arr.length)];
@@ -20,7 +21,7 @@ export function chooseMain(state, who, difficulty, rng = Math.random) {
   const byKind = (k) => plays.find((id) => cardKind(id) === k);
 
   if (oppScore >= 17) {
-    const sabotage = byKind('kangeki') || byKind('shibakyori');
+    const sabotage = plays.find((id) => SABOTAGE_KINDS.includes(cardKind(id)));
     if (sabotage) return { cardId: sabotage, opts: {} };
   }
   const sorted = plays

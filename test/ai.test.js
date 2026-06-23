@@ -32,3 +32,25 @@ test('chooseCounter returns null when no counter in hand', () => {
   s = playCard(s, 'host', 'hikoki_1');
   assert.equal(chooseCounter(s, 'guest', 'normal', () => 0), null);
 });
+
+test('normal AI values nusumi/kuidame as scoring options', () => {
+  const s = createInitialState();
+  s.hands.host = ['nusumi_1', 'kokan_1']; // nusumi scores, kokan utility
+  const { cardId } = chooseMain(s, 'host', 'normal', () => 0);
+  assert.equal(cardId, 'nusumi_1');
+});
+
+test('normal AI plays yakimochi when opponent is near winning', () => {
+  const s = createInitialState();
+  s.scores.guest = 18;
+  s.hands.host = ['kokan_1', 'yakimochi_1'];
+  const { cardId } = chooseMain(s, 'host', 'normal', () => 0);
+  assert.equal(cardId, 'yakimochi_1');
+});
+
+test('chooseMain always returns a legal card including expansion kinds', () => {
+  const s = createInitialState();
+  s.hands.host = ['kunkun_1', 'dassou_1', 'okawari_1'];
+  const { cardId } = chooseMain(s, 'host', 'easy', () => 0);
+  assert.ok(s.hands.host.includes(cardId));
+});
