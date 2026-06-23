@@ -19,6 +19,7 @@ let resolvingCounter = false;
 function wireMenu() {
   document.getElementById('btn-cpu').onclick = () => showScreen('difficulty');
   document.getElementById('btn-online').onclick = () => showScreen('online');
+  document.getElementById('btn-guide').onclick = () => showScreen('guide');
   document.querySelectorAll('.back').forEach((b) => (b.onclick = () => showScreen('top')));
   document.getElementById('btn-home').onclick = () => showScreen('top');
   document.querySelectorAll('[data-diff]').forEach((b) => {
