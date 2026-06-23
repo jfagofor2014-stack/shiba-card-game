@@ -114,6 +114,7 @@ async function onPlayCardOnline(cardId, pushState) {
     await pushState(roomCode, state);
   } else if (state.turn === myRole && state.extraActions > 0) {
     state = consumeExtraAction(state);
+    renderBoard(state, myRole, { onPlayCard: (id) => onPlayCardOnline(id, pushState) });
     await pushState(roomCode, state);
   } else {
     // non-counterable card: end turn immediately and push once.

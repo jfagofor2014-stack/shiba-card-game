@@ -167,7 +167,7 @@ export function resolveEffect(state, who, cardId, opts = {}, rng = Math.random) 
       break;
     case 'nusumi':
       s = addScore(s, who, 1);
-      if (!hasSukima(s, opp)) {
+      if (!s.winner && !hasSukima(s, opp)) {
         s.scores[opp] = Math.max(0, s.scores[opp] - 1);
       }
       s.log.push(`${label(who)}は「${CARD_TYPES.nusumi.name}」で相手のスキを1奪った`);

@@ -18,7 +18,6 @@ export function chooseMain(state, who, difficulty, rng = Math.random) {
 
   // normal
   const oppScore = state.scores[opponent(who)];
-  const byKind = (k) => plays.find((id) => cardKind(id) === k);
 
   if (oppScore >= 17) {
     const sabotage = plays.find((id) => SABOTAGE_KINDS.includes(cardKind(id)));
