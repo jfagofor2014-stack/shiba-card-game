@@ -180,6 +180,8 @@ test('shibakyori scores but does not destroy hand when opponent has sukima', () 
 test('drill discards chosen cards and draws discarded+1', () => {
   const s = createInitialState();
   s.hands.host = ['drill_1', 'hikoki_3', 'hesoten_2'];
+  // Control the deck so the redraw is deterministic and cannot pull a drill copy.
+  s.deck = ['kunkun_1', 'kunkun_2', 'okawari_1', 'okawari_2', 'kokan_1', 'kokan_2'];
   const next = resolveEffect(s, 'host', 'drill_1', { drillDiscard: ['hikoki_3', 'hesoten_2'] });
   // played drill (1) + discarded 2 removed = started 3, drew 2+1=3 => hand 3
   assert.equal(next.hands.host.length, 3);
@@ -370,6 +372,9 @@ test('itazura discards up to 2 random opponent cards, blocked by sukima', () => 
 test('dassou discards whole hand and draws 5', () => {
   const s = createInitialState();
   s.hands.host = ['dassou_1', 'hikoki_2', 'hikoki_3'];
+  // Control the deck so the redraw is deterministic and cannot pull the other
+  // dassou copy (or dassou_1 if the random deal left it in the deck).
+  s.deck = ['kunkun_1', 'kunkun_2', 'okawari_1', 'okawari_2', 'kokan_1', 'kokan_2'];
   const next = resolveEffect(s, 'host', 'dassou_1');
   assert.equal(next.hands.host.length, 5);
   assert.ok(!next.hands.host.includes('dassou_1'));
