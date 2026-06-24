@@ -56,13 +56,34 @@ function wireOnline() {
   };
 }
 
+let onlineLotteryShown = false;
 function startOnline(subscribe, pushState) {
   setLabels('あなた', 'あいて');
+  currentMode = 'online';
+  onlineLotteryShown = false;
   if (unsub) unsub();
-  unsub = subscribe(roomCode, (room) => {
+  unsub = subscribe(roomCode, async (room) => {
+    if (room.rematch && room.rematch.host && room.rematch.guest) {
+      if (myRole === 'host') {
+        const first = Math.random() < 0.5 ? 'host' : 'guest';
+        const { startNewGame } = await import('./online.js');
+        await startNewGame(roomCode, createInitialState(Math.random, first));
+      }
+      onlineLotteryShown = false;
+      return;
+    }
     if (room.status === 'playing' && room.state) {
       state = room.state;
-      if (document.querySelector('[data-screen="game"]').classList.contains('hidden')) {
+      if (!onlineLotteryShown) {
+        onlineLotteryShown = true;
+        showScreen('lottery');
+        showLottery({ host: 'あなた', guest: 'あいて' }, { forced: state.turn }, () => {
+          showScreen('game'); renderOnline(pushState);
+        });
+        return;
+      }
+      if (document.querySelector('[data-screen="game"]').classList.contains('hidden')
+          && document.querySelector('[data-screen="lottery"]').classList.contains('hidden')) {
         showScreen('game');
       }
       renderOnline(pushState);
@@ -300,7 +321,11 @@ function afterActionPass() {
   else { renderPass(); }
 }
 
-function requestOnlineRematch() {}
+async function requestOnlineRematch() {
+  const { setRematch } = await import('./online.js');
+  document.getElementById('result-text').textContent = '相手の返事待ち…';
+  await setRematch(roomCode, myRole);
+}
 
 wireMenu();
 wireOnline();

@@ -48,3 +48,15 @@ export function subscribe(code, onState) {
 export async function pushState(code, state) {
   await set(ref(db, `rooms/${code}/state`), state);
 }
+
+export async function setRematch(code, role) {
+  await set(ref(db, `rooms/${code}/rematch/${role}`), true);
+}
+
+export async function resetRematch(code) {
+  await set(ref(db, `rooms/${code}/rematch`), { host: false, guest: false });
+}
+
+export async function startNewGame(code, state) {
+  await update(ref(db, `rooms/${code}`), { state, status: 'playing', rematch: { host: false, guest: false } });
+}
