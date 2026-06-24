@@ -430,3 +430,9 @@ test('endTurn clears reveal for the player whose turn begins', () => {
   s = endTurn(s); // guest ends -> host turn begins -> clear host reveal
   assert.equal(s.reveal.host, false);
 });
+
+test('createInitialState honors the first-player argument', () => {
+  assert.equal(createInitialState(Math.random).turn, 'host');           // default
+  assert.equal(createInitialState(Math.random, 'guest').turn, 'guest'); // explicit
+  assert.equal(createInitialState(Math.random, 'host').turn, 'host');
+});
