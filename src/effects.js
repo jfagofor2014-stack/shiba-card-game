@@ -38,6 +38,27 @@ export function showLottery(labels, opts, onResult) {
   };
 }
 
+let battleBusy = false;
+export function playCardBattle(cardName, effectText, onDone) {
+  if (battleBusy) { onDone(); return; }
+  battleBusy = true;
+  const layer = document.getElementById('battle-layer');
+  layer.querySelector('.battle-name').textContent = cardName;
+  layer.querySelector('.battle-eff').textContent = effectText || '';
+  layer.classList.remove('hidden');
+  layer.classList.add('run');
+  let finished = false;
+  const finish = () => {
+    if (finished) return; finished = true;
+    layer.classList.add('hidden'); layer.classList.remove('run');
+    layer.removeEventListener('pointerdown', finish);
+    battleBusy = false;
+    onDone();
+  };
+  layer.addEventListener('pointerdown', finish);
+  setTimeout(finish, 700);
+}
+
 export function initOrientationGuard() {
   const overlay = document.getElementById('orient-overlay');
   const update = () => {

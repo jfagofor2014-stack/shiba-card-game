@@ -4,7 +4,7 @@ import {
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
-import { requestLandscape, initOrientationGuard, showLottery } from './effects.js';
+import { requestLandscape, initOrientationGuard, showLottery, playCardBattle } from './effects.js';
 
 let state = null;
 let difficulty = 'normal';
@@ -107,22 +107,25 @@ async function afterCounter(pushState) {
 async function onPlayCardOnline(cardId, pushState) {
   if (state.turn !== myRole || state.phase !== 'main') return;
   if (!legalPlays(state, myRole).includes(cardId)) return;
-  let opts = {};
-  if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
-  state = playCard(state, myRole, cardId, opts);
-  if (state.phase === 'awaiting_counter') {
-    // counterable card: push awaiting_counter and do nothing else.
-    // The defender resolves the counter and finalizes the turn.
-    await pushState(roomCode, state);
-  } else if (state.turn === myRole && state.extraActions > 0) {
-    state = consumeExtraAction(state);
-    renderBoard(state, myRole, { onPlayCard: (id) => onPlayCardOnline(id, pushState) });
-    await pushState(roomCode, state);
-  } else {
-    // non-counterable card: end turn immediately and push once.
-    state = endTurn(state);
-    await pushState(roomCode, state);
-  }
+  const def = CARD_TYPES[cardKind(cardId)];
+  playCardBattle(def.name, effectTextFor(cardId), async () => {
+    let opts = {};
+    if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
+    state = playCard(state, myRole, cardId, opts);
+    if (state.phase === 'awaiting_counter') {
+      // counterable card: push awaiting_counter and do nothing else.
+      // The defender resolves the counter and finalizes the turn.
+      await pushState(roomCode, state);
+    } else if (state.turn === myRole && state.extraActions > 0) {
+      state = consumeExtraAction(state);
+      renderBoard(state, myRole, { onPlayCard: (id) => onPlayCardOnline(id, pushState) });
+      await pushState(roomCode, state);
+    } else {
+      // non-counterable card: end turn immediately and push once.
+      state = endTurn(state);
+      await pushState(roomCode, state);
+    }
+  });
 }
 
 function startCpuGame() {
@@ -147,12 +150,13 @@ function refresh() {
 function onPlayCard(cardId) {
   if (state.turn !== HUMAN || state.phase !== 'main') return;
   if (!legalPlays(state, HUMAN).includes(cardId)) return;
+  const def = CARD_TYPES[cardKind(cardId)];
+  playCardBattle(def.name, effectTextFor(cardId), () => resolveHumanPlay(cardId));
+}
 
+function resolveHumanPlay(cardId) {
   let opts = {};
-  if (cardKind(cardId) === 'drill') {
-    // simple: discard nothing for human in v1 (could add a picker later)
-    opts = { drillDiscard: [] };
-  }
+  if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
   state = playCard(state, HUMAN, cardId, opts);
 
   if (state.phase === 'awaiting_counter') {
@@ -175,23 +179,26 @@ function cpuTurn() {
   if (state.turn !== CPU || state.winner) return;
   const { cardId, opts } = chooseMain(state, CPU, difficulty);
   if (!cardId) { state = endTurn(state); refresh(); return; }
-  state = playCard(state, CPU, cardId, opts);
+  const def = CARD_TYPES[cardKind(cardId)];
+  playCardBattle(def.name, effectTextFor(cardId), () => {
+    state = playCard(state, CPU, cardId, opts);
 
-  if (state.phase === 'awaiting_counter') {
-    // human may counter CPU's score/sabotage
-    const humanCounters = legalPlays(state, HUMAN);
-    if (humanCounters.length > 0) {
-      const def = CARD_TYPES[cardKind(state.pending.cardId)];
-      showCounterPrompt(
-        'あいて', def.name, effectTextFor(state.pending.cardId),
-        () => { state = applyCounter(state, HUMAN, humanCounters[0]); finishCpuTurn(); },
-        () => { state = applyCounter(state, HUMAN, null); finishCpuTurn(); },
-      );
-      return;
+    if (state.phase === 'awaiting_counter') {
+      // human may counter CPU's score/sabotage
+      const humanCounters = legalPlays(state, HUMAN);
+      if (humanCounters.length > 0) {
+        const cpuDef = CARD_TYPES[cardKind(state.pending.cardId)];
+        showCounterPrompt(
+          'あいて', cpuDef.name, effectTextFor(state.pending.cardId),
+          () => { state = applyCounter(state, HUMAN, humanCounters[0]); finishCpuTurn(); },
+          () => { state = applyCounter(state, HUMAN, null); finishCpuTurn(); },
+        );
+        return;
+      }
+      state = applyCounter(state, HUMAN, null);
     }
-    state = applyCounter(state, HUMAN, null);
-  }
-  finishCpuTurn();
+    finishCpuTurn();
+  });
 }
 
 function finishCpuTurn() {
@@ -253,10 +260,13 @@ function renderPass() {
 function onPlayCardPass(cardId) {
   if (state.turn !== holder || state.phase !== 'main') return;
   if (!legalPlays(state, holder).includes(cardId)) return;
-  let opts = {};
-  if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
-  state = playCard(state, holder, cardId, opts);
-  afterActionPass();
+  const def = CARD_TYPES[cardKind(cardId)];
+  playCardBattle(def.name, effectTextFor(cardId), () => {
+    let opts = {};
+    if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
+    state = playCard(state, holder, cardId, opts);
+    afterActionPass();
+  });
 }
 
 function afterActionPass() {

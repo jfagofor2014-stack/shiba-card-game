@@ -88,3 +88,16 @@ input { font-size: 1.3rem; padding: 10px; width: 140px; text-align: center; bord
 .lottery-tails .tail.curl { transform: scale(1.4) rotate(-20deg); transition: transform .3s; }
 @keyframes tailspin { from { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } to { transform: rotate(-15deg); } }
 .lottery-result { font-size: 1.3rem; font-weight: bold; min-height: 1.6em; margin-top: 10px; color: #c2185b; }
+
+.battle-layer { position: fixed; inset: 0; z-index: 80; display: flex;
+  align-items: center; justify-content: center; pointer-events: auto; }
+.battle-layer.hidden { display: none; }
+.battle-card { background: #fff; border-radius: 14px; padding: 18px 26px; text-align: center;
+  box-shadow: 0 6px 24px rgba(0,0,0,.4); animation: battlepop .7s ease-out; }
+.battle-name { font-size: 1.4rem; font-weight: bold; }
+.battle-eff { font-size: 1rem; color: #c2185b; margin-top: 6px; }
+.battle-flash { position: absolute; inset: 0; background: radial-gradient(circle, rgba(255,255,255,.85), transparent 60%);
+  opacity: 0; animation: flash .7s ease-out; pointer-events: none; }
+@keyframes battlepop { 0% { transform: scale(.3); opacity: 0; } 30% { transform: scale(1.15); opacity: 1; }
+  70% { transform: scale(1); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes flash { 0% { opacity: 0; } 25% { opacity: .9; } 100% { opacity: 0; } }
