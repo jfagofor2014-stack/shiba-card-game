@@ -1,4 +1,5 @@
 import { showScreen, renderBoard, showCounterPrompt, showResult, effectTextFor, showHandoff } from './ui.js';
+import { showWinCelebration } from './effects.js';
 import {
   createInitialState, playCard, applyCounter, endTurn,
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
@@ -70,7 +71,7 @@ async function renderOnline(pushState) {
   if (state.phase !== 'awaiting_counter') resolvingCounter = false;
 
   renderBoard(state, myRole, { onPlayCard: (cardId) => onPlayCardOnline(cardId, pushState) });
-  if (state.winner) { showResult(state.winner === myRole ? 'あなた' : '相手'); return; }
+  if (state.winner) { const l = state.winner === myRole ? 'あなた' : '相手'; showWinCelebration(l, () => showResult(l)); return; }
 
   // if I am the defender in an awaiting_counter, I resolve the counter,
   // run endTurn, and push the finalized next-turn state in a single write.
@@ -143,7 +144,8 @@ function startCpuGame() {
 function refresh() {
   renderBoard(state, HUMAN, { onPlayCard });
   if (state.winner) {
-    showResult(state.winner === HUMAN ? 'あなた' : 'CPU');
+    const label = state.winner === HUMAN ? 'あなた' : 'CPU';
+    showWinCelebration(label, () => showResult(label));
   }
 }
 
@@ -236,7 +238,7 @@ function startPassGame() {
 
 function renderPass() {
   renderBoard(state, holder, { onPlayCard: onPlayCardPass });
-  if (state.winner) { showResult(P_LABEL[state.winner]); return; }
+  if (state.winner) { const l = P_LABEL[state.winner]; showWinCelebration(l, () => showResult(l)); return; }
 
   if (state.phase === 'awaiting_counter' && state.pending) {
     const defender = opponent(state.pending.actor);

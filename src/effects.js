@@ -59,6 +59,24 @@ export function playCardBattle(cardName, effectText, onDone) {
   setTimeout(finish, 700);
 }
 
+export function showWinCelebration(winnerLabel, onDone) {
+  const el = document.getElementById('celebrate');
+  const conf = el.querySelector('.confetti');
+  el.querySelector('.celebrate-text').textContent = `${winnerLabel} の勝ち！🎉`;
+  const colors = ['#f48fb1', '#64b5f6', '#81c784', '#ffb74d', '#fff176'];
+  conf.innerHTML = '';
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('span');
+    p.className = 'confetti-piece';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = (Math.random() * 0.6) + 's';
+    conf.appendChild(p);
+  }
+  el.classList.remove('hidden');
+  setTimeout(() => { el.classList.add('hidden'); onDone(); }, 1800);
+}
+
 export function initOrientationGuard() {
   const overlay = document.getElementById('orient-overlay');
   const update = () => {

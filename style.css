@@ -101,3 +101,14 @@ input { font-size: 1.3rem; padding: 10px; width: 140px; text-align: center; bord
 @keyframes battlepop { 0% { transform: scale(.3); opacity: 0; } 30% { transform: scale(1.15); opacity: 1; }
   70% { transform: scale(1); } 100% { transform: scale(1); opacity: 1; } }
 @keyframes flash { 0% { opacity: 0; } 25% { opacity: .9; } 100% { opacity: 0; } }
+
+.celebrate { position: fixed; inset: 0; z-index: 90; display: flex;
+  align-items: center; justify-content: center; pointer-events: none; }
+.celebrate.hidden { display: none; }
+.celebrate-text { font-size: 2.2rem; font-weight: bold; color: #c2185b;
+  text-shadow: 0 2px 0 #fff; animation: winpop .6s ease-out; z-index: 2; }
+@keyframes winpop { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.25); } 100% { transform: scale(1); opacity: 1; } }
+.confetti { position: absolute; inset: 0; overflow: hidden; }
+.confetti-piece { position: absolute; top: -20px; width: 10px; height: 14px; border-radius: 2px;
+  animation: fall 1.8s linear forwards; }
+@keyframes fall { to { transform: translateY(110vh) rotate(720deg); } }
