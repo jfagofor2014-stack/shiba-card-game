@@ -4,10 +4,11 @@ import {
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
-import { requestLandscape, initOrientationGuard } from './effects.js';
+import { requestLandscape, initOrientationGuard, showLottery } from './effects.js';
 
 let state = null;
 let difficulty = 'normal';
+let currentMode = null; // 'cpu' | 'pass' | 'online'
 const HUMAN = 'host';
 const CPU = 'guest';
 
@@ -125,10 +126,15 @@ async function onPlayCardOnline(cardId, pushState) {
 }
 
 function startCpuGame() {
+  currentMode = 'cpu';
   setLabels('あなた', 'あいて');
-  state = createInitialState();
-  showScreen('game');
-  refresh();
+  showScreen('lottery');
+  showLottery({ host: 'あなた', guest: 'CPU' }, {}, (winner) => {
+    state = createInitialState(Math.random, winner);
+    showScreen('game');
+    refresh();
+    if (!state.winner && state.turn === CPU) cpuTurn();
+  });
 }
 
 function refresh() {
@@ -209,11 +215,15 @@ function wirePass() {
 }
 
 function startPassGame() {
+  currentMode = 'pass';
   setLabels('プレイヤー1', 'プレイヤー2');
-  state = createInitialState();
-  holder = 'host';
-  showScreen('game');
-  showHandoff(P_LABEL.host, renderPass);
+  showScreen('lottery');
+  showLottery({ host: 'プレイヤー1', guest: 'プレイヤー2' }, {}, (winner) => {
+    state = createInitialState(Math.random, winner);
+    holder = winner;
+    showScreen('game');
+    showHandoff(P_LABEL[winner], renderPass);
+  });
 }
 
 

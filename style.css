@@ -80,3 +80,11 @@ input { font-size: 1.3rem; padding: 10px; width: 140px; text-align: center; bord
   /* compact log to a thin strip */
   .log { height: 40px; }
 }
+
+.lottery-tails { display: flex; gap: 40px; font-size: 3rem; }
+.lottery-tails .tail { display: flex; flex-direction: column; align-items: center; }
+.lottery-tails .tail-name { font-size: 1rem; margin-top: 6px; }
+.lottery-tails .tail.spin { animation: tailspin .5s linear infinite; }
+.lottery-tails .tail.curl { transform: scale(1.4) rotate(-20deg); transition: transform .3s; }
+@keyframes tailspin { from { transform: rotate(-15deg); } 50% { transform: rotate(15deg); } to { transform: rotate(-15deg); } }
+.lottery-result { font-size: 1.3rem; font-weight: bold; min-height: 1.6em; margin-top: 10px; color: #c2185b; }
