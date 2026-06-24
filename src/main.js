@@ -4,6 +4,7 @@ import {
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
+import { requestLandscape, initOrientationGuard } from './effects.js';
 
 let state = null;
 let difficulty = 'normal';
@@ -275,4 +276,10 @@ function afterActionPass() {
 wireMenu();
 wireOnline();
 wirePass();
+initOrientationGuard();
+// 最初のユーザー操作で全画面＋横ロックをベストエフォート
+document.body.addEventListener('pointerdown', function once() {
+  requestLandscape();
+  document.body.removeEventListener('pointerdown', once);
+}, { once: true });
 showScreen('top');

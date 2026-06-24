@@ -59,3 +59,8 @@ input { font-size: 1.3rem; padding: 10px; width: 140px; text-align: center; bord
 .card.text-card .effect { position: static; background: none; font-size: .66rem;
   text-align: center; line-height: 1.15; }
 .card.peek { opacity: .85; transform: scale(.92); }
+
+.orient-overlay { position: fixed; inset: 0; background: #3e2723; color: #fff;
+  display: flex; align-items: center; justify-content: center; z-index: 100; }
+.orient-overlay.hidden { display: none; }
+.orient-msg { font-size: 1.6rem; text-align: center; line-height: 1.8; }
