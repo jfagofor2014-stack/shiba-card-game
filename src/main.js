@@ -25,6 +25,11 @@ function wireMenu() {
   document.getElementById('btn-guide').onclick = () => showScreen('guide');
   document.querySelectorAll('.back').forEach((b) => (b.onclick = () => showScreen('top')));
   document.getElementById('btn-home').onclick = () => showScreen('top');
+  document.getElementById('btn-again').onclick = () => {
+    if (currentMode === 'cpu') startCpuGame();
+    else if (currentMode === 'pass') startPassGame();
+    else if (currentMode === 'online') requestOnlineRematch();
+  };
   document.querySelectorAll('[data-diff]').forEach((b) => {
     b.onclick = () => { difficulty = b.dataset.diff; startCpuGame(); };
   });
@@ -294,6 +299,8 @@ function afterActionPass() {
   if (next !== holder) { holder = next; showHandoff(P_LABEL[next], renderPass); }
   else { renderPass(); }
 }
+
+function requestOnlineRematch() {}
 
 wireMenu();
 wireOnline();
