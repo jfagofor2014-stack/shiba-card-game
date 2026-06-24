@@ -82,8 +82,10 @@ function startOnline(subscribe, pushState) {
         });
         return;
       }
-      if (document.querySelector('[data-screen="game"]').classList.contains('hidden')
-          && document.querySelector('[data-screen="lottery"]').classList.contains('hidden')) {
+      // While the tail-lottery animation is still on screen, don't render into the
+      // (hidden) game screen — the lottery's onResult will show the game and render.
+      if (!document.querySelector('[data-screen="lottery"]').classList.contains('hidden')) return;
+      if (document.querySelector('[data-screen="game"]').classList.contains('hidden')) {
         showScreen('game');
       }
       renderOnline(pushState);
