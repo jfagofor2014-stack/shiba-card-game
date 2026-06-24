@@ -1,11 +1,10 @@
 import { showScreen, renderBoard, showCounterPrompt, showResult, effectTextFor, showHandoff } from './ui.js';
-import { showWinCelebration } from './effects.js';
 import {
   createInitialState, playCard, applyCounter, endTurn,
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
-import { requestLandscape, initOrientationGuard, showLottery, playCardBattle } from './effects.js';
+import { requestLandscape, initOrientationGuard, showLottery, playCardBattle, showWinCelebration } from './effects.js';
 
 let state = null;
 let difficulty = 'normal';
