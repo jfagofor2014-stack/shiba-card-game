@@ -4,11 +4,23 @@ import {
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
-import { requestLandscape, initOrientationGuard, showLottery, playCardBattle, showWinCelebration } from './effects.js';
+import { requestLandscape, initOrientationGuard, showLottery, playCardBattle, showWinCelebration, detectCombos, showCombo } from './effects.js';
 
 let state = null;
 let difficulty = 'normal';
 let currentMode = null; // 'cpu' | 'pass' | 'online'
+
+let turnPlays = [];
+let comboActor = null;
+const comboShown = new Set();
+
+function recordPlay(actor, cardId) {
+  if (actor !== comboActor) { turnPlays = []; comboShown.clear(); comboActor = actor; }
+  turnPlays.push(cardKind(cardId));
+  for (const c of detectCombos(turnPlays)) {
+    if (!comboShown.has(c)) { comboShown.add(c); showCombo(c); }
+  }
+}
 const HUMAN = 'host';
 const CPU = 'guest';
 
@@ -140,6 +152,7 @@ async function onPlayCardOnline(cardId, pushState) {
     let opts = {};
     if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
     state = playCard(state, myRole, cardId, opts);
+    recordPlay(myRole, cardId);
     if (state.phase === 'awaiting_counter') {
       // counterable card: push awaiting_counter and do nothing else.
       // The defender resolves the counter and finalizes the turn.
@@ -187,6 +200,7 @@ function resolveHumanPlay(cardId) {
   let opts = {};
   if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
   state = playCard(state, HUMAN, cardId, opts);
+  recordPlay(HUMAN, cardId);
 
   if (state.phase === 'awaiting_counter') {
     // CPU decides whether to counter the human's play
@@ -211,6 +225,7 @@ function cpuTurn() {
   const def = CARD_TYPES[cardKind(cardId)];
   playCardBattle(def.name, effectTextFor(cardId), () => {
     state = playCard(state, CPU, cardId, opts);
+    recordPlay(CPU, cardId);
 
     if (state.phase === 'awaiting_counter') {
       // human may counter CPU's score/sabotage
@@ -294,6 +309,7 @@ function onPlayCardPass(cardId) {
     let opts = {};
     if (cardKind(cardId) === 'drill') opts = { drillDiscard: [] };
     state = playCard(state, holder, cardId, opts);
+    recordPlay(holder, cardId);
     afterActionPass();
   });
 }

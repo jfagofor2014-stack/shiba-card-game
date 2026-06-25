@@ -19,6 +19,19 @@ export function detectCombos(plays) {
   return combos;
 }
 
+let comboTimer = null;
+export function showCombo(name) {
+  const layer = document.getElementById('combo-layer');
+  layer.querySelector('.combo-text').textContent = `${name}！`;
+  layer.classList.remove('hidden');
+  layer.classList.remove('run');
+  // restart animation
+  void layer.offsetWidth;
+  layer.classList.add('run');
+  clearTimeout(comboTimer);
+  comboTimer = setTimeout(() => layer.classList.add('hidden'), 800);
+}
+
 export function requestLandscape() {
   const el = document.documentElement;
   try { if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); } catch (e) { /* ignore */ }
