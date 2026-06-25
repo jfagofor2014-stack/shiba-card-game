@@ -122,3 +122,12 @@ input { font-size: 1.3rem; padding: 10px; width: 140px; text-align: center; bord
 .combo-layer.run .combo-text { animation: comboin .5s ease-out; }
 @keyframes comboin { 0% { transform: scale(.4) rotate(-6deg); opacity: 0; }
   60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+.turn-timer { width: 100%; display: flex; align-items: center; gap: 8px; }
+.turn-timer.hidden { display: none; }
+.turn-timer .timer-bar { height: 8px; background: #81c784; border-radius: 4px; flex: 1;
+  transition: width 1s linear; }
+.turn-timer .timer-num { font-weight: bold; min-width: 1.4em; text-align: right; }
+.turn-timer.warn .timer-bar { background: #e53935; }
+.turn-timer.warn .timer-num { color: #e53935; animation: blink .5s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .3; } }

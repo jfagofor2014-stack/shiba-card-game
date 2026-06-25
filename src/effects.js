@@ -2,6 +2,36 @@
 
 const AMAE_KINDS = new Set(['hikoki', 'hesoten', 'kuidame']);
 
+let turnTimerId = null;
+export function stopTurnTimer() {
+  if (turnTimerId) { clearInterval(turnTimerId); turnTimerId = null; }
+  const el = document.getElementById('turn-timer');
+  if (el) el.classList.add('hidden');
+}
+export function startTurnTimer(seconds, onTimeout) {
+  stopTurnTimer();
+  const el = document.getElementById('turn-timer');
+  const bar = el.querySelector('.timer-bar');
+  const num = el.querySelector('.timer-num');
+  let remaining = seconds;
+  const render = () => {
+    el.classList.remove('hidden');
+    num.textContent = remaining;
+    bar.style.width = `${(remaining / seconds) * 100}%`;
+    el.classList.toggle('warn', remaining <= 3);
+  };
+  render();
+  turnTimerId = setInterval(() => {
+    remaining -= 1;
+    if (remaining <= 0) {
+      stopTurnTimer();
+      onTimeout();
+      return;
+    }
+    render();
+  }, 1000);
+}
+
 // plays: kinds played this turn, in order. Returns combo names that hold.
 export function detectCombos(plays) {
   const set = new Set(plays);
