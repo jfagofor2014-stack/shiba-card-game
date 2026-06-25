@@ -4,11 +4,25 @@ import {
   legalPlays, CARD_TYPES, cardKind, opponent, setLabels, consumeExtraAction,
 } from './game-rules.js';
 import { chooseMain, chooseCounter } from './ai.js';
-import { requestLandscape, initOrientationGuard, showLottery, playCardBattle, showWinCelebration, detectCombos, showCombo } from './effects.js';
+import { requestLandscape, initOrientationGuard, showLottery, playCardBattle, showWinCelebration, detectCombos, showCombo, startTurnTimer, stopTurnTimer } from './effects.js';
 
 let state = null;
 let difficulty = 'normal';
 let currentMode = null; // 'cpu' | 'pass' | 'online'
+let onlinePushState = null; // set in startOnline
+
+function armTimer() { startTurnTimer(10, autoPlayRandom); }
+
+function autoPlayRandom() {
+  const role = currentMode === 'pass' ? holder : (currentMode === 'online' ? myRole : HUMAN);
+  if (!state || state.winner || state.turn !== role || state.phase !== 'main') return;
+  const plays = legalPlays(state, role);
+  if (!plays.length) return;
+  const cardId = plays[Math.floor(Math.random() * plays.length)];
+  if (currentMode === 'cpu') onPlayCard(cardId);
+  else if (currentMode === 'pass') onPlayCardPass(cardId);
+  else if (currentMode === 'online') onPlayCardOnline(cardId, onlinePushState);
+}
 
 let turnPlays = [];
 let comboActor = null;
@@ -69,6 +83,7 @@ function wireOnline() {
 
 let onlineLotteryShown = false;
 function startOnline(subscribe, pushState) {
+  onlinePushState = pushState;
   setLabels('あなた', 'あいて');
   currentMode = 'online';
   onlineLotteryShown = false;
@@ -110,7 +125,7 @@ async function renderOnline(pushState) {
   if (state.phase !== 'awaiting_counter') resolvingCounter = false;
 
   renderBoard(state, myRole, { onPlayCard: (cardId) => onPlayCardOnline(cardId, pushState) });
-  if (state.winner) { const l = state.winner === myRole ? 'あなた' : '相手'; showWinCelebration(l, () => showResult(l)); return; }
+  if (state.winner) { stopTurnTimer(); const l = state.winner === myRole ? 'あなた' : '相手'; showWinCelebration(l, () => showResult(l)); return; }
 
   // if I am the defender in an awaiting_counter, I resolve the counter,
   // run endTurn, and push the finalized next-turn state in a single write.
@@ -134,6 +149,8 @@ async function renderOnline(pushState) {
       resolvingCounter = false;
     }
   }
+  if (state.turn === myRole && state.phase === 'main' && !state.winner) armTimer();
+  else stopTurnTimer();
 }
 
 async function afterCounter(pushState) {
@@ -147,6 +164,7 @@ async function afterCounter(pushState) {
 async function onPlayCardOnline(cardId, pushState) {
   if (state.turn !== myRole || state.phase !== 'main') return;
   if (!legalPlays(state, myRole).includes(cardId)) return;
+  stopTurnTimer();
   const def = CARD_TYPES[cardKind(cardId)];
   playCardBattle(def.name, effectTextFor(cardId), async () => {
     let opts = {};
@@ -184,14 +202,19 @@ function startCpuGame() {
 function refresh() {
   renderBoard(state, HUMAN, { onPlayCard });
   if (state.winner) {
+    stopTurnTimer();
     const label = state.winner === HUMAN ? 'あなた' : 'CPU';
     showWinCelebration(label, () => showResult(label));
+    return;
   }
+  if (state.turn === HUMAN && state.phase === 'main') armTimer();
+  else stopTurnTimer();
 }
 
 function onPlayCard(cardId) {
   if (state.turn !== HUMAN || state.phase !== 'main') return;
   if (!legalPlays(state, HUMAN).includes(cardId)) return;
+  stopTurnTimer();
   const def = CARD_TYPES[cardKind(cardId)];
   playCardBattle(def.name, effectTextFor(cardId), () => resolveHumanPlay(cardId));
 }
@@ -280,7 +303,7 @@ function startPassGame() {
 
 function renderPass() {
   renderBoard(state, holder, { onPlayCard: onPlayCardPass });
-  if (state.winner) { const l = P_LABEL[state.winner]; showWinCelebration(l, () => showResult(l)); return; }
+  if (state.winner) { stopTurnTimer(); const l = P_LABEL[state.winner]; showWinCelebration(l, () => showResult(l)); return; }
 
   if (state.phase === 'awaiting_counter' && state.pending) {
     const defender = opponent(state.pending.actor);
@@ -299,11 +322,14 @@ function renderPass() {
       }
     }
   }
+  if (state.turn === holder && state.phase === 'main' && !state.winner) armTimer();
+  else stopTurnTimer();
 }
 
 function onPlayCardPass(cardId) {
   if (state.turn !== holder || state.phase !== 'main') return;
   if (!legalPlays(state, holder).includes(cardId)) return;
+  stopTurnTimer();
   const def = CARD_TYPES[cardKind(cardId)];
   playCardBattle(def.name, effectTextFor(cardId), () => {
     let opts = {};
