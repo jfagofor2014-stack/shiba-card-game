@@ -1,5 +1,24 @@
 // 純UI演出モジュール（DOM操作のみ、ゲーム状態を持たない）
 
+const AMAE_KINDS = new Set(['hikoki', 'hesoten', 'kuidame']);
+
+// plays: kinds played this turn, in order. Returns combo names that hold.
+export function detectCombos(plays) {
+  const set = new Set(plays);
+  const combos = [];
+  const di = plays.indexOf('dassou');
+  const ki = plays.indexOf('kuidame');
+  if (di !== -1 && ki !== -1 && di < ki) combos.push('引き直しコンボ');
+  const kn = plays.indexOf('kunkun');
+  if (kn !== -1 && plays.slice(kn + 1).some((k) => ['nusumi', 'yakimochi', 'itazura'].includes(k))) {
+    combos.push('のぞき見コンボ');
+  }
+  if (set.has('nusumi') && set.has('yakimochi')) combos.push('いじわるコンボ');
+  if (plays.filter((k) => AMAE_KINDS.has(k)).length >= 2) combos.push('甘えんぼコンボ');
+  if (plays.length >= 3) combos.push('ノンストップコンボ');
+  return combos;
+}
+
 export function requestLandscape() {
   const el = document.documentElement;
   try { if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); } catch (e) { /* ignore */ }
