@@ -1,4 +1,4 @@
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE = `shiba-${VERSION}`;
 const ASSETS = [
   './', './index.html', './style.css', './manifest.json',
