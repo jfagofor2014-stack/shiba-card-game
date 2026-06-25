@@ -11,6 +11,7 @@ export function stopTurnTimer() {
 export function startTurnTimer(seconds, onTimeout) {
   stopTurnTimer();
   const el = document.getElementById('turn-timer');
+  if (!el) return;
   const bar = el.querySelector('.timer-bar');
   const num = el.querySelector('.timer-num');
   let remaining = seconds;
